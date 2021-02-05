@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace ce_toy_cs.Framework
+namespace ce_toy_fx
 {
     public class FindKeysVisistor : ExpressionVisitor
     {
@@ -37,7 +37,7 @@ namespace ce_toy_cs.Framework
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
-//            Debug.WriteLine(new string(' ', _depth * 2) + node.Method.Name);
+            //            Debug.WriteLine(new string(' ', _depth * 2) + node.Method.Name);
 
             if (node.Method.Name == "GetValues")
             {
