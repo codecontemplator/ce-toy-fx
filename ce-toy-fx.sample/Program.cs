@@ -4,7 +4,7 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace ce_toy_cs
+namespace ce_toy_fx.sample
 {
     class Program
     {
@@ -17,12 +17,12 @@ namespace ce_toy_cs
             Console.WriteLine();
 
             Console.WriteLine("# Creating applicants");
-            var applicants = new []
+            var applicants = new[]
             {
                 CreateApplicant("applicant1", process),
                 CreateApplicant("applicant2", process),
             };
-            foreach(var applicant in applicants) 
+            foreach (var applicant in applicants)
                 Console.WriteLine($"{applicant.Id}: a priori keys={string.Join(',', applicant.KeyValueMap.Keys)} loaders={string.Join(',', applicant.Loaders.Select(x => x.Name))}");
             Console.WriteLine();
 
@@ -42,15 +42,15 @@ namespace ce_toy_cs
             Console.WriteLine();
 
             Console.WriteLine($"# Evaluation log");
-            Console.WriteLine($"{"Message",-45} | {"Amount",10} | { "Value", 10}");
+            Console.WriteLine($"{"Message",-45} | {"Amount",10} | { "Value",10}");
             Console.WriteLine(new string('-', 45 + 10 + 10 + 6));
-            foreach(var logRow in result.Item2.Log)
+            foreach (var logRow in result.Item2.Log)
             {
-                Console.WriteLine($"{logRow.Message,-45} | { logRow.PreContext.Amount, 10} | { logRow.Value, 10}");
+                Console.WriteLine($"{logRow.Message,-45} | { logRow.PreContext.Amount,10} | { logRow.Value,10}");
             }
         }
 
-        private static Applicant CreateApplicant(string applicantId, Framework.Process process)
+        private static Applicant CreateApplicant(string applicantId, ce_toy_cs.Framework.Process process)
         {
             var aprioriInfo = ApplicantDatabase.Instance.AprioriInfo[applicantId];
             var availableLoaders = new ILoader[] { AddressLoader.Instance, CreditLoader.Instance, CreditScoreCalculator.Instance };
@@ -66,4 +66,3 @@ namespace ce_toy_cs
         }
     }
 }
-    

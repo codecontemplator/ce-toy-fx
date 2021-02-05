@@ -1,8 +1,8 @@
-﻿using ce_toy_cs.VariableTypes;
+﻿using ce_toy_fx.sample.VariableTypes;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace ce_toy_cs
+namespace ce_toy_fx.sample
 {
     class ApplicantDatabase
     {
@@ -65,4 +65,3 @@ namespace ce_toy_cs
     }
 
 }
-    

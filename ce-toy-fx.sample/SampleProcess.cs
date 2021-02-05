@@ -1,10 +1,10 @@
 ﻿using ce_toy_cs.Framework;
 using ce_toy_cs.Framework.Functional;
-using ce_toy_cs.VariableTypes;
+using ce_toy_fx.sample.VariableTypes;
 using System;
 using System.Linq;
 
-namespace ce_toy_cs
+namespace ce_toy_fx.sample
 {
     using RuleDef = RuleExprAst<Unit, RuleExprContext<Unit>>;
 
