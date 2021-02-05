@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp5.0</TargetFramework>
+    <RootNamespace>ce_toy_fx</RootNamespace>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+</Project>
