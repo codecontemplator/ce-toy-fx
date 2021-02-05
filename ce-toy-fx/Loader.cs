@@ -1,5 +1,5 @@
 ﻿using ce_toy_cs.Framework;
-using ce_toy_cs.Framework.Details;
+using ce_toy_fx.Details;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
