@@ -1,11 +1,11 @@
-﻿using ce_toy_cs;
+﻿using ce_toy_cs.Framework;
 using ce_toy_cs.Framework.Details;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace ce_toy_cs.Framework
+namespace ce_toy_fx
 {
     public interface ILoader
     {

@@ -1,5 +1,5 @@
 ﻿using ce_toy_cs.Framework;
-using ce_toy_cs.Framework.Functional;
+using ce_toy_fx;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
@@ -50,7 +50,7 @@ namespace ce_toy_fx.sample
             }
         }
 
-        private static Applicant CreateApplicant(string applicantId, ce_toy_cs.Framework.Process process)
+        private static Applicant CreateApplicant(string applicantId, Process process)
         {
             var aprioriInfo = ApplicantDatabase.Instance.AprioriInfo[applicantId];
             var availableLoaders = new ILoader[] { AddressLoader.Instance, CreditLoader.Instance, CreditScoreCalculator.Instance };

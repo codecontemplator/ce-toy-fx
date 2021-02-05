@@ -1,6 +1,4 @@
-﻿using ce_toy_cs.Framework;
-
-namespace ce_toy_fx.sample
+﻿namespace ce_toy_fx.sample
 {
     namespace VariableTypes
     {

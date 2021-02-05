@@ -1,4 +1,4 @@
-﻿namespace ce_toy_cs.Framework.Functional
+﻿namespace ce_toy_fx
 {
     public class Unit : IRuleContextApplicable
     {

@@ -1,9 +1,8 @@
-﻿using ce_toy_cs.Framework.Functional;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ce_toy_cs.Framework
+namespace ce_toy_fx
 {
     public static class Dsl
     {

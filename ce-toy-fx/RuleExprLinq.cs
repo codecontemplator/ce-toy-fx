@@ -1,12 +1,11 @@
 ﻿using ce_toy_cs.Framework.Details;
-using ce_toy_cs.Framework.Functional;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace ce_toy_cs.Framework
+namespace ce_toy_fx
 {
     public static class RuleExprLinq
     {
@@ -35,7 +34,7 @@ namespace ce_toy_cs.Framework
 
         private static Expression CreateLogEntry(Expression messageExpr, Expression preContextExpr, Expression postContextExpr, Expression valueExpr)
         {
-            Expression<Func<string, RuleExprContextBase, RuleExprContextBase, object, LogEntry>> createLogEntry = (message, preContext, postContext, value) => 
+            Expression<Func<string, RuleExprContextBase, RuleExprContextBase, object, LogEntry>> createLogEntry = (message, preContext, postContext, value) =>
                 new LogEntry { Message = message, PreContext = preContext, PostContext = postContext, Value = value };
             return Expression.Invoke(createLogEntry, messageExpr, preContextExpr, postContextExpr, valueExpr);
         }
@@ -87,7 +86,7 @@ namespace ce_toy_cs.Framework
                     Expression.Assign(contextAVar, Expression.Field(valueOptionAndContextAVar, "Item2")),
                     MkTuple<Option<T>, RuleExprContext>(
                         valueOptionAVar,
-                        //Expression.Convert(
+                            //Expression.Convert(
                             Expression.Call(
                                 contextAVar,
                                 typeof(RuleExprContext).GetMethod("WithLogging"),
@@ -98,8 +97,8 @@ namespace ce_toy_cs.Framework
                                     Expression.Convert(valueOptionAVar, typeof(object))
                                     )
                             )//,
-                        //    typeof(RuleExprContext)
-                        //)
+                             //    typeof(RuleExprContext)
+                             //)
                     )
                 );
 
@@ -459,10 +458,10 @@ namespace ce_toy_cs.Framework
             var valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
             var valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
             var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
-            
+
             var functionImplementation =
                 Expression.Block(
-                    Expression.Assign(valueOptionAndContextAVar, Expression.Invoke(expr.Expression, context)), 
+                    Expression.Assign(valueOptionAndContextAVar, Expression.Invoke(expr.Expression, context)),
                     Expression.Assign(valueOptionAVar, Expression.Field(valueOptionAndContextAVar, "Item1")),
                     Expression.Assign(contextAVar, Expression.Field(valueOptionAndContextAVar, "Item2")),
                     Expression.Condition(
@@ -500,7 +499,7 @@ namespace ce_toy_cs.Framework
             return result;
         }
 
-        public static RuleExprAst<Unit, RuleExprContext<Unit>> RejectIf<T>(this RuleExprAst<T, RuleExprContext<string>> expr, Expression<Func<T,bool>> predicate, string message)
+        public static RuleExprAst<Unit, RuleExprContext<Unit>> RejectIf<T>(this RuleExprAst<T, RuleExprContext<string>> expr, Expression<Func<T, bool>> predicate, string message)
         {
             return expr.Where(predicate).Select(_ => FailUnit.Value).LogContext(message).Lift();
         }

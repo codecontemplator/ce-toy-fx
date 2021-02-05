@@ -1,7 +1,6 @@
-﻿using ce_toy_cs.Framework.Functional;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace ce_toy_cs.Framework
+namespace ce_toy_fx
 {
     public interface IVariable
     {

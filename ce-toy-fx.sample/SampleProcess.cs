@@ -1,6 +1,4 @@
-﻿using ce_toy_cs.Framework;
-using ce_toy_cs.Framework.Functional;
-using ce_toy_fx.sample.VariableTypes;
+﻿using ce_toy_fx.sample.VariableTypes;
 using System;
 using System.Linq;
 

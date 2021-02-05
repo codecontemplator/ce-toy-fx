@@ -2,7 +2,7 @@
 using System.Collections.Immutable;
 using System.Linq.Expressions;
 
-namespace ce_toy_cs.Framework
+namespace ce_toy_fx
 {
     public delegate (Option<T>, RuleExprContext) RuleExpr<T, RuleExprContext>(RuleExprContext input);
 

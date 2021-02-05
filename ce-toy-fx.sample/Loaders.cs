@@ -1,5 +1,4 @@
-﻿using ce_toy_cs.Framework;
-using ce_toy_fx.sample.VariableTypes;
+﻿using ce_toy_fx.sample.VariableTypes;
 using System.Collections.Immutable;
 
 namespace ce_toy_fx.sample
