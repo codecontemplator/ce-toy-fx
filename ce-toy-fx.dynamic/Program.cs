@@ -9,7 +9,8 @@ namespace ce_toy_fx.dynamic
         {
             Console.WriteLine("Hello World!");
             var drule = new DynamicRule();
-            drule.CSharpScriptEvaluate();
+            var x = drule.CSharpScriptEvaluate();
+            Console.WriteLine(x);
         }
     }
 }
