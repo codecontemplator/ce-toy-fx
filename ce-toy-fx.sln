@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ce-toy-fx", "ce-toy-fx\ce-toy-fx.csproj", "{D565E2CF-F4C0-4B11-BE77-BF43DEBC5F52}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ce-toy-fx.sample", "ce-toy-fx.sample\ce-toy-fx.sample.csproj", "{EE158B30-6E26-408E-9C73-79F7BBDA2DC2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ce-toy-fx.sample", "ce-toy-fx.sample\ce-toy-fx.sample.csproj", "{EE158B30-6E26-408E-9C73-79F7BBDA2DC2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ce-toy-fx.dynamic", "ce-toy-fx.dynamic\ce-toy-fx.dynamic.csproj", "{354BC4E6-95BA-474B-A805-A0F05C0E4DF0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{EE158B30-6E26-408E-9C73-79F7BBDA2DC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE158B30-6E26-408E-9C73-79F7BBDA2DC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EE158B30-6E26-408E-9C73-79F7BBDA2DC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{354BC4E6-95BA-474B-A805-A0F05C0E4DF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{354BC4E6-95BA-474B-A805-A0F05C0E4DF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{354BC4E6-95BA-474B-A805-A0F05C0E4DF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{354BC4E6-95BA-474B-A805-A0F05C0E4DF0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
