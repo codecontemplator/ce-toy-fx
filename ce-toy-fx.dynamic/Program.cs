@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace ce_toy_fx.dynamic
 {
@@ -7,9 +8,9 @@ namespace ce_toy_fx.dynamic
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            var program = File.ReadAllText("SampleProcess.txt");
             var drule = new DynamicRule();
-            var x = drule.CSharpScriptEvaluate();
+            var x = drule.CSharpScriptEvaluate(program);
             Console.WriteLine(x);
         }
     }

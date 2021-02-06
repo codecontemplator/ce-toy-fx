@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace ce_toy_fx.dynamic
@@ -23,16 +24,26 @@ namespace ce_toy_fx.dynamic
 
             //StandardHeader = GetUsingStatements(usings);
         }
-        public int CSharpScriptEvaluate() //string lambda)
+        public Process CSharpScriptEvaluate(string program) //string lambda)
         {
             //var returnTypeAsString = GetCSharpRepresentation(typeof(T), true);
-            string outerClass = "public class Wrapper { public static int DoStuff() { return 1+2; } }"; //  StandardHeader + $"public static class Wrapper {{ public static {returnTypeAsString} expr = {lambda}; }}";
+            //string outerClass = "public class Wrapper { public static int DoStuff() { return 1+2; } }"; //  StandardHeader + $"public static class Wrapper {{ public static {returnTypeAsString} expr = {lambda}; }}";
+
+            //The location of the .NET assemblies
+            var systemPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
 
             var compilation = CSharpCompilation.Create(
                 "DynamicRuleCompiler_" + Guid.NewGuid(),
-                new[] { CSharpSyntaxTree.ParseText(outerClass) },
+                new[] { CSharpSyntaxTree.ParseText(program) },
                 new[] { 
-                    MetadataReference.CreateFromFile(typeof(object).Assembly.Location) 
+                    MetadataReference.CreateFromFile(typeof(Object).Assembly.Location),
+                    MetadataReference.CreateFromFile(Path.Combine(systemPath, "mscorlib.dll")),
+                    MetadataReference.CreateFromFile(Path.Combine(systemPath, "System.dll")),
+                    MetadataReference.CreateFromFile(Path.Combine(systemPath, "System.Core.dll")),
+                    MetadataReference.CreateFromFile(Path.Combine(systemPath, "System.Runtime.dll")),
+                    MetadataReference.CreateFromFile(Path.Combine(systemPath, "System.Linq.dll")),
+                    MetadataReference.CreateFromFile(typeof(Applicant).Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof(Expression).Assembly.Location)
                 },
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
@@ -49,11 +60,11 @@ namespace ce_toy_fx.dynamic
             ms.Seek(0, SeekOrigin.Begin);
             var assembly = assemblyLoadContext.LoadFromStream(ms);
 
-            var outerClassType = assembly.GetType("Wrapper");
+            var outerClassType = assembly.GetType("ce_toy_fx.sample.SampleProcess");
 
-            var exprField = outerClassType.GetMethod("DoStuff", BindingFlags.Public | BindingFlags.Static);
+            var exprField = outerClassType.GetMethod("GetProcess", BindingFlags.Public | BindingFlags.Static);
             var result = exprField.Invoke(null, null);
-            return (int)result;
+            return (Process)result;
         }
     }
 }
