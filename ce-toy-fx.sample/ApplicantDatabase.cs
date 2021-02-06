@@ -25,7 +25,7 @@ namespace ce_toy_fx.sample
             {
                 { Variables.CreditA, 20 },
                 { Variables.CreditB, 29 },
-                { Variables.Salary, 10 },
+                { Variables.Salary, 16 },
                 { Variables.Flags, 1 }
             }.ToImmutableDictionary();
             creditInfo["applicant2"] = new Dictionary<string, object>
@@ -42,8 +42,7 @@ namespace ce_toy_fx.sample
                 { Variables.Role, Roles.Primary },
                 { Variables.CreditA, 20 },
                 { Variables.CreditB, 29 },
-                { Variables.Salary, 10 },
-                { Variables.Age, 50 },
+                { Variables.Age, 70 },
                 { Variables.Deceased, false }
             }.ToImmutableDictionary();
             aprioreInfo["applicant2"] = new Dictionary<string, object>

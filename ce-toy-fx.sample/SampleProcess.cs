@@ -75,17 +75,28 @@ namespace ce_toy_fx.sample
                 }.Join();
         }
 
+        public static RuleDef CaseRule()
+        {
+            return
+                Variables.Age.Value.Case(
+                        (age => age < 18,              (from salary in Variables.Salary.Value where salary > 10 select passed).LogContext("Age < 18")),
+                        (age => age >= 18 && age < 65, (from salary in Variables.Salary.Value where salary > 20 select passed).LogContext("Age >= 18 && Age < 65")),
+                        (age => age >= 65,             (from salary in Variables.Salary.Value where salary > 15 select passed).LogContext("Age >= 65"))
+                    ).Lift().Apply();
+        }
+
         public static Process GetProcess()
         {
             return
                 new[]
                 {
-                    AbsoluteMaxAmount(100).LogContext("AbsoluteMaxAmount"),
                     Policies(18, 100, 2).LogContext("Policies"),
+                    AbsoluteMaxAmount(100).LogContext("AbsoluteMaxAmount"),
                     MaxTotalDebt(50).LogContext("MaxTotalDebt"),
-                    MinTotalSalary(50).LogContext("MinTotalSalary"),
                     PrimaryApplicantMustHaveAddress().LogContext("PrimaryApplicantMustHaveAddress"),
-                    CreditScoreUnderLimit(0.9).LogContext("CreditScoreUnderLimit")
+                    CreditScoreUnderLimit(0.9).LogContext("CreditScoreUnderLimit"),
+                    MinTotalSalary(50).LogContext("MinTotalSalary"),
+                    CaseRule().LogContext("CaseRule"),
                 }.CompileToProcess("Sample process");
         }
     }

@@ -503,5 +503,10 @@ namespace ce_toy_fx
         {
             return expr.Where(predicate).Select(_ => FailUnit.Value).LogContext(message).Lift();
         }
+
+        public static RuleExprAst<S, RuleExprContext> Case<T, S, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, params (Func<T, bool>, RuleExprAst<S, RuleExprContext>)[] cases)
+        {
+            return expr.SelectMany(value => cases.First(c => c.Item1(value)).Item2, (_, x) => x);
+        }
     }
 }
