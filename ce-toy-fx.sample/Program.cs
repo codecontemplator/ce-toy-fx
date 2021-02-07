@@ -1,6 +1,7 @@
 ﻿using ce_toy_fx;
 using System;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 
 namespace ce_toy_fx.sample
@@ -9,7 +10,18 @@ namespace ce_toy_fx.sample
     {
         static void Main(string[] args)
         {
-            var process = SampleProcess.GetProcess();
+            Console.WriteLine("Dynamic (D) / Static (S) ?");
+            var selection = Console.ReadLine();
+            Process process;
+            if (selection == "D")
+            {
+                var program = File.ReadAllText("SampleProcessDynamic.txt");
+                process = DynamicRule.CreateFromString(program);
+            } 
+            else
+            {
+                process = SampleProcess.GetProcess();
+            }
 
             Console.WriteLine("# Process created");
             Console.WriteLine($"Required keys: {string.Join(',', process.Keys)}");
