@@ -10,6 +10,10 @@ namespace ce_toy_fx.sample
     {
         static void Main(string[] args)
         {
+            var code = CodeGenerator.GenerateCodeForPolicyRule();
+            Console.WriteLine(code);
+            return;
+
             Console.WriteLine("Dynamic (D) / Static (S) ?");
             var selection = Console.ReadLine();
             Process process;

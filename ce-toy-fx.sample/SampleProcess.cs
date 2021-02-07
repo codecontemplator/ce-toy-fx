@@ -85,6 +85,47 @@ namespace ce_toy_fx.sample
                     ).Lift().Apply();
         }
 
+        static RuleExprAst<PassUnit, RuleExprContext<string>> Policy(string role)
+        {
+            throw new NotImplementedException();
+        }
+
+        static RuleExprAst<PassUnit, RuleExprContext<string>> Policy2(string role)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static RuleDef Test()
+        {
+            return new RuleDef[]
+            {
+                (
+                    from amount in Dsl.GetAmount<Unit>()
+                    select new Amount(Math.Min(amount, 100))
+                ).LogContext("Amount rule").Apply(),
+                new RuleDef[]
+                {
+                    (
+                        from salaries in Variables.Salary.Values
+                        where salaries.Sum() > 100
+                        select passed
+                    ).LogContext("Min salary").Apply()
+                }.Join().LogContext("Salary rules").Apply(),
+
+                Variables.Age.Value
+                    .SelectMany(_ => Variables.Salary.Value, (Age, Salary) => new { Age, Salary })
+                    .SelectMany(_ => Variables.Role.Value, (x, Role) => new { x.Salary, x.Age, Role })
+                    .Where(x => x.Age < 18 && x.Salary > 100 && x.Role == Roles.Primary).Select(x => x.Age > 10 ? passed : passed).Lift(),
+
+Variables.Age.Value
+.SelectMany(_ => Variables.Salary.Value, (Age, Salary) => new { Age, Salary })
+.SelectMany(_ => Variables.Role.Value, (x, Role) => new { x.Age,x.Salary, Role })
+.SelectMany(_ => Variables.CreditScore.Value, (x, CreditScore) => new { x.Age,x.Salary,x.Role, CreditScore })
+.SelectMany(y => y.Salary > 100 ? Policy(y.Role.ToString()) : Policy2(y.Role.ToString()), (_, x) => x).Lift()
+
+            }.Join();
+        }
+
         public static Process GetProcess()
         {
             return

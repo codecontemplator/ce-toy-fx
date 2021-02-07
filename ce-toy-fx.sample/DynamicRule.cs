@@ -1,11 +1,13 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Text;
 
 namespace ce_toy_fx.sample
 {
@@ -81,6 +83,100 @@ namespace ce_toy_fx.sample
             var exprField = outerClassType.GetMethod("GetProcess", BindingFlags.Public | BindingFlags.Static);
             var result = exprField.Invoke(null, null);
             return (Process)result;
+        }
+    }
+
+    public class CodeGenerator
+    {
+        public abstract class Rule
+        {
+            public string Name { get; set; }
+        }
+        /*
+         Variables.Age.Value
+            .SelectMany(_ => Variables.Salary.Value, (Age, Salary) => new { Age, Salary })
+            .SelectMany(_ => Variables.Role.Value, (x, Role) => new { x.Age,x.Salary, Role })
+            .SelectMany(_ => Variables.CreditScore.Value, (x, CreditScore) => new { x.Age,x.Salary,x.Role, CreditScore })
+            .Where(x => x.Age < 18 && x.Salary > 100 && x.Role == Roles.Primary)
+            .Select(x => x.Age > 10 ? passed : passed).Lift() 
+         */
+        public class PolicyRule : Rule
+        {
+            public string[] Variables { get; set; } = new string[] { "Age", "Salary", "Role", "CreditScore" };
+            public string Condition { get; set; } = "x => x.Age < 18 && x.Salary > 100 && x.Role == Roles.Primary";
+            public string Projection { get; } = "pass";
+        }
+
+        /*
+                Condition.Eval("...").
+                    SelectMany(c => c ?                         
+                        new RuleDef[]
+                        {
+                           ... children...
+                        }.Join(),
+                        Wrap(Unit.Value), (_,x) => x);
+         */
+
+        public class GroupRule : Rule
+        {
+            public string Condition { get; set; } = "x => x.Age < 18 && x.Salary > 100 && x.Role == Roles.Primary";
+
+            public List<Rule> Children { get; set; }
+        }
+
+        public static string GenerateCodeForPolicyRule()
+        {
+            return GenerateCodeForPolicyRule(
+                new string[] { "Age", "Salary", "Role", "CreditScore" },
+                "x => x.Age < 18 && x.Salary > 100 && x.Role == Roles.Primary",
+                "x => x.Age > 10 ? passed : passed", "rulename"
+                );
+        }
+
+        public static string GenerateCodeForPolicyRule(
+            string[] variables, 
+            string condition, 
+            string projection,
+            string name)
+        {
+            var code = new StringBuilder();
+            code.Append(GenerateVariableContext(variables));
+
+            if (condition != null)
+            {
+                code.Append(".Where(").Append(condition).AppendLine(")");
+            }
+
+            code.Append(".Select(").Append(projection).AppendLine(")");
+            code.AppendLine(".Lift()");
+            if (name != null)
+            {
+                code.Append($".LogContext(\"").Append(name).AppendLine("\")");
+            }
+            return code.ToString();
+        }
+
+        public static string GenerateVariableContext(string[] variables)
+        {
+            var code = new StringBuilder();
+            foreach (var (variable, i) in variables.Select((s, i) => (s, i)))
+            {
+                switch (i)
+                {
+                    case 0:
+                        code.AppendLine($"Variables.{variable}.Value");
+                        break;
+                    case 1:
+                        var prev = variables[i - 1];
+                        code.AppendLine($".SelectMany(_ => Variables.{variable}.Value, ({prev}, {variable}) => new {{ {prev}, {variable} }})");
+                        break;
+                    default:
+                        var allPrev = string.Join(',', variables.Take(i).Select(v => $"x.{v}"));
+                        code.AppendLine($".SelectMany(_ => Variables.{variable}.Value, (x, {variable}) => new {{ {allPrev}, {variable} }})");
+                        break;
+                }
+            }
+            return code.ToString();
         }
     }
 }
