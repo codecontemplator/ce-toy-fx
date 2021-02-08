@@ -27,13 +27,14 @@ namespace ce_toy_fx
         public ImmutableDictionary<string, Applicant> Applicants { get; init; }
         public ImmutableList<LogEntry> Log { get; init; }
         public abstract RuleExprContextBase WithNewAmount(Option<Amount> newAmount);
+        public abstract RuleExprContextBase WithLogging(LogEntry entry);
     }
 
     public record RuleExprContext<SelectorType> : RuleExprContextBase
     {
         public SelectorType Selector { get; init; }
         public override RuleExprContext<SelectorType> WithNewAmount(Option<Amount> newAmount) => newAmount.isSome ? this with { Amount = newAmount.value.Value } : this;
-        public RuleExprContext<SelectorType> WithLogging(LogEntry entry) => this with { Log = Log.Add(entry) };
+        public override RuleExprContext<SelectorType> WithLogging(LogEntry entry) => this with { Log = Log.Add(entry) };
         public RuleExprContext<NewSelectorType> WithSelector<NewSelectorType>(NewSelectorType newSelector) =>
             new RuleExprContext<NewSelectorType> { Amount = Amount, Applicants = Applicants, Log = Log, Selector = newSelector };
     }
