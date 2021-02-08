@@ -8,3 +8,4 @@ ce-toy-fx is the continuation of [ce-toy-cs](https://github.com/codecontemplator
 * Support dynamic rules 
 * Can expression tree key analysis be less of a hack?
 * Chaining of rejection policies (negative srules) are not intuitive
+* Generalizer context applicable so that it becomes a transformation between (value,ctx) and (value',ctx')
