@@ -32,6 +32,17 @@ namespace ce_toy_fx.sample
                 ).Apply();
         }
 
+        private static RuleDef MaxAmountPerApplicant(int amountLimit, int ageLimit)
+        {
+            return
+                (
+                    from amount in Dsl.GetAmount<string>()
+                    from age in Variables.Age.Value
+                    where age < ageLimit
+                    select new Amount(Math.Min(amount, amountLimit))
+                ).Lift();
+        }
+
         private static RuleDef MaxTotalDebt(double debtLimit)
         {
             return
@@ -88,7 +99,7 @@ namespace ce_toy_fx.sample
         }
 
 
-        public static RuleDef LiftPostitivePolicy(int minAge, int maxAge, int maxFlags)
+        private static RuleDef LiftPostitivePolicy(int minAge, int maxAge, int maxFlags)
         {
             RuleExprAst<PassUnit, RuleExprContext<string>> PolicyAcceptIf<T>(RuleExprAst<T, RuleExprContext<string>> expr, Func<T, bool> predicate, string message)
             {
@@ -104,7 +115,7 @@ namespace ce_toy_fx.sample
                 }.Join().Lift();
         }
 
-        public static RuleDef LiftNegativePolicy(int minAge, int maxAge, int maxFlags)
+        private static RuleDef LiftNegativePolicy(int minAge, int maxAge, int maxFlags)
         {
             RuleExprAst<FailUnit, RuleExprContext<string>> PolicyRejectIf<T>(RuleExprAst<T, RuleExprContext<string>> expr, Func<T, bool> predicate, string message)
             {
@@ -120,7 +131,7 @@ namespace ce_toy_fx.sample
                 }.Join().Lift();
         }
 
-        public static RuleDef CaseRule()
+        private static RuleDef CaseRule()
         {
             return
                 Variables.Age.Value.Case(
@@ -141,6 +152,7 @@ namespace ce_toy_fx.sample
                     AbsoluteMaxAmount(100).LogContext("AbsoluteMaxAmount"),
                     MaxAmountForAge(90, 71).LogContext("MaxAmountForAge 1"),
                     MaxAmountForAge(50, 50).LogContext("MaxAmountForAge 2"),
+                    MaxAmountPerApplicant(80, 60).LogContext("MaxAmountPerApplicant"),
                     MaxTotalDebt(50).LogContext("MaxTotalDebt"),
                     PrimaryApplicantMustHaveAddress().LogContext("PrimaryApplicantMustHaveAddress"),
                     CreditScoreUnderLimit(0.9).LogContext("CreditScoreUnderLimit"),
