@@ -79,16 +79,17 @@ namespace ce_toy_fx.sample
 
         public static RuleDef LiftPolicy(int minAge, int maxAge, int maxFlags)
         {
-            RuleExprAst<FailUnit, RuleExprContext<string>> PolicyRejectIf<T>(RuleExprAst<T, RuleExprContext<string>> expr, Expression<Func<T, bool>> predicate, string message)
+            RuleExprAst<PassUnit, RuleExprContext<string>> PolicyAcceptIf<T>(RuleExprAst<T, RuleExprContext<string>> expr, Func<T, bool> predicate, string message)
             {
-                return expr.Where(predicate).Select(_ => FailUnit.Value).LogContext(message);
+                return expr.Where(x => predicate(x)).Select(_ => PassUnit.Value).LogContext(message);
             }
 
             return
-                new RuleExprAst<FailUnit, RuleExprContext<string>>[]
+                new RuleExprAst<PassUnit, RuleExprContext<string>>[]
                 {
-                    PolicyRejectIf(Variables.Age.Value, age => age < minAge || age > maxAge, "Age failed"),
-                    PolicyRejectIf(Variables.Deceased.Value, deceased => deceased, "Must be alive")
+                    PolicyAcceptIf(Variables.Age.Value, age => age >= minAge && age <= maxAge, "Age policy"),
+                    PolicyAcceptIf(Variables.Deceased.Value, deceased => !deceased, "Must be alive"),
+                    PolicyAcceptIf(Variables.Flags.Value, flags => flags < 2, "Flags")
                 }.Join().Lift();
         }
 
@@ -108,6 +109,7 @@ namespace ce_toy_fx.sample
                 new[]
                 {
                     Policies(18, 100, 2).LogContext("Policies"),
+                    LiftPolicy(18, 100, 2).LogContext("LiftPolicy"),
                     AbsoluteMaxAmount(100).LogContext("AbsoluteMaxAmount"),
                     MaxTotalDebt(50).LogContext("MaxTotalDebt"),
                     PrimaryApplicantMustHaveAddress().LogContext("PrimaryApplicantMustHaveAddress"),
