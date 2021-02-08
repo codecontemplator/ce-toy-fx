@@ -418,7 +418,7 @@ namespace ce_toy_fx
             //   return aborted ? (None, context) : (Just as, context)
         }
 
-        public static RuleExprAst<Unit, RuleExprContext> Join<RuleExprContext>(this RuleExprAst<Unit, RuleExprContext> expr, RuleExprAst<Unit, RuleExprContext> exprNext)
+        public static RuleExprAst<T2, RuleExprContext> Join<T1,T2,RuleExprContext>(this RuleExprAst<T1, RuleExprContext> expr, RuleExprAst<T2, RuleExprContext> exprNext)
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
@@ -434,8 +434,8 @@ namespace ce_toy_fx
                     Expression.Condition(
                         Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
                         Expression.Invoke(exprNext.Expression, contextAVar),
-                        MkTuple<Option<Unit>, RuleExprContext>(
-                            GetNoneValue<Unit>(),
+                        MkTuple<Option<T2>, RuleExprContext>(
+                            GetNoneValue<T2>(),
                             contextAVar
                         )
                     )
@@ -447,8 +447,8 @@ namespace ce_toy_fx
                     functionImplementation
                 );
 
-            var function = Expression.Lambda<RuleExpr<Unit, RuleExprContext>>(functionBody, context);
-            return new RuleExprAst<Unit, RuleExprContext> { Expression = function };
+            var function = Expression.Lambda<RuleExpr<T2, RuleExprContext>>(functionBody, context);
+            return new RuleExprAst<T2, RuleExprContext> { Expression = function };
         }
 
         public static RuleExprAst<Unit, RuleExprContext> Apply<T, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr) where T : IRuleContextApplicable
@@ -491,7 +491,7 @@ namespace ce_toy_fx
             return new RuleExprAst<Unit, RuleExprContext> { Expression = function };
         }
 
-        public static RuleExprAst<Unit, RuleExprContext> Join<RuleExprContext>(this IEnumerable<RuleExprAst<Unit, RuleExprContext>> ruleExprAsts)
+        public static RuleExprAst<T, RuleExprContext> Join<T,RuleExprContext>(this IEnumerable<RuleExprAst<T, RuleExprContext>> ruleExprAsts)
         {
             var result = ruleExprAsts.First();
             foreach (var next in ruleExprAsts.Skip(1))

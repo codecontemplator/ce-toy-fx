@@ -1,6 +1,7 @@
 ﻿using ce_toy_fx.sample.VariableTypes;
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace ce_toy_fx.sample
 {
@@ -73,6 +74,22 @@ namespace ce_toy_fx.sample
                     Variables.Deceased.Value.RejectIf(deceased => deceased,                $"Must be alive"),
                     Variables.Flags.Value.RejectIf   (flags => flags >= 2,                 $"Flags must be less than {maxFlags}")
                 }.Join();
+        }
+
+
+        public static RuleDef LiftPolicy(int minAge, int maxAge, int maxFlags)
+        {
+            RuleExprAst<FailUnit, RuleExprContext<string>> PolicyRejectIf<T>(RuleExprAst<T, RuleExprContext<string>> expr, Expression<Func<T, bool>> predicate, string message)
+            {
+                return expr.Where(predicate).Select(_ => FailUnit.Value).LogContext(message);
+            }
+
+            return
+                new RuleExprAst<FailUnit, RuleExprContext<string>>[]
+                {
+                    PolicyRejectIf(Variables.Age.Value, age => age < minAge || age > maxAge, "Age failed"),
+                    PolicyRejectIf(Variables.Deceased.Value, deceased => deceased, "Must be alive")
+                }.Join().Lift();
         }
 
         public static RuleDef CaseRule()
