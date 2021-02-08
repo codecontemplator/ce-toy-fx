@@ -7,3 +7,4 @@ ce-toy-fx is the continuation of [ce-toy-cs](https://github.com/codecontemplator
 * Improve logging
 * Support dynamic rules 
 * Can expression tree key analysis be less of a hack?
+* Chaining of rejection policies (negative srules) are not intuitive
