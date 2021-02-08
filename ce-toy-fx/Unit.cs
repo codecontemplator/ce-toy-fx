@@ -1,15 +1,10 @@
 ﻿namespace ce_toy_fx
 {
-    public class Unit : IRuleContextApplicable
+    public class Unit
     {
         private Unit() { }
 
         public static Unit Value { get; } = new Unit();
-
-        public RuleContext ApplyTo<RuleContext>(RuleContext ctx) where RuleContext : RuleExprContextBase
-        {
-            return ctx;
-        }
 
         public override bool Equals(object obj)
         {
@@ -27,7 +22,7 @@
         }
     }
 
-    public class FailUnit // : IRuleContextApplicable
+    public class FailUnit
     {
         private FailUnit() { }
 
@@ -47,14 +42,9 @@
         {
             return "(<fail>)";
         }
-
-        //public RuleContext ApplyTo<RuleContext>(RuleContext ctx) where RuleContext : RuleExprContextBase
-        //{
-        //    return ctx;
-        //}
     }
 
-    public class PassUnit : IRuleContextApplicable
+    public class PassUnit
     {
         private PassUnit() { }
 
@@ -73,11 +63,6 @@
         public override string ToString()
         {
             return "(<pass>)";
-        }
-
-        public RuleContext ApplyTo<RuleContext>(RuleContext ctx) where RuleContext : RuleExprContextBase
-        {
-            return ctx;
         }
     }
 }

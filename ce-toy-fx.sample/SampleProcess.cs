@@ -30,7 +30,7 @@ namespace ce_toy_fx.sample
                     let totalCredit = creditA + creditB
                     where totalCredit < debtLimit
                     select passed
-               ).Lift().Apply();
+               ).Lift();
         }
 
         private static RuleDef MinTotalSalary(int salaryLimit)
@@ -52,7 +52,7 @@ namespace ce_toy_fx.sample
                     from address in Variables.Address.Value
                     where !address.IsValid
                     select rejected
-               ).Lift().Apply();
+               ).Lift();
         }
 
         private static RuleDef CreditScoreUnderLimit(double limit)
@@ -62,7 +62,7 @@ namespace ce_toy_fx.sample
                     from creditScore in Variables.CreditScore.Value
                     where creditScore < limit
                     select passed
-               ).Lift().Apply();
+               ).Lift();
         }
 
         private static RuleDef Policies(int minAge, int maxAge, int maxFlags)
@@ -77,7 +77,7 @@ namespace ce_toy_fx.sample
         }
 
 
-        public static RuleDef LiftPolicy(int minAge, int maxAge, int maxFlags)
+        public static RuleDef LiftPostitivePolicy(int minAge, int maxAge, int maxFlags)
         {
             RuleExprAst<PassUnit, RuleExprContext<string>> PolicyAcceptIf<T>(RuleExprAst<T, RuleExprContext<string>> expr, Func<T, bool> predicate, string message)
             {
@@ -93,6 +93,22 @@ namespace ce_toy_fx.sample
                 }.Join().Lift();
         }
 
+        public static RuleDef LiftNegativePolicy(int minAge, int maxAge, int maxFlags)
+        {
+            RuleExprAst<FailUnit, RuleExprContext<string>> PolicyRejectIf<T>(RuleExprAst<T, RuleExprContext<string>> expr, Func<T, bool> predicate, string message)
+            {
+                return expr.Where(x => predicate(x)).Select(_ => FailUnit.Value).LogContext(message);
+            }
+
+            return
+                new RuleExprAst<PassUnit, RuleExprContext<string>>[]
+                {
+                    PolicyRejectIf(Variables.Age.Value, age => age < minAge || age > maxAge, "Age policy (-)").Apply(),
+                    PolicyRejectIf(Variables.Deceased.Value, deceased => deceased, "Must be alive (-)").Apply(),
+                    PolicyRejectIf(Variables.Flags.Value, flags => flags >= 2, "Flags (-)").Apply()
+                }.Join().Lift();
+        }
+
         public static RuleDef CaseRule()
         {
             return
@@ -100,7 +116,7 @@ namespace ce_toy_fx.sample
                         (age => age < 18,              (from salary in Variables.Salary.Value where salary > 10 select passed).LogContext("Age < 18")),
                         (age => age >= 18 && age < 65, (from salary in Variables.Salary.Value where salary > 20 select passed).LogContext("Age >= 18 && Age < 65")),
                         (age => age >= 65,             (from salary in Variables.Salary.Value where salary > 15 select passed).LogContext("Age >= 65"))
-                    ).Lift().Apply();
+                    ).Lift();
         }
 
         public static Process GetProcess()
@@ -109,7 +125,8 @@ namespace ce_toy_fx.sample
                 new[]
                 {
                     Policies(18, 100, 2).LogContext("Policies"),
-                    LiftPolicy(18, 100, 2).LogContext("LiftPolicy"),
+                    LiftPostitivePolicy(18, 100, 2).LogContext("LiftPolicy(+)"),
+                    LiftNegativePolicy(18, 100, 2).LogContext("LiftPolicy(-)"),
                     AbsoluteMaxAmount(100).LogContext("AbsoluteMaxAmount"),
                     MaxTotalDebt(50).LogContext("MaxTotalDebt"),
                     PrimaryApplicantMustHaveAddress().LogContext("PrimaryApplicantMustHaveAddress"),

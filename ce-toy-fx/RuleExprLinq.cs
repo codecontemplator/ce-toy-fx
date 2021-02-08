@@ -451,44 +451,41 @@ namespace ce_toy_fx
             return new RuleExprAst<T2, RuleExprContext> { Expression = function };
         }
 
-        public static RuleExprAst<Unit, RuleExprContext> Apply<T, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr) where T : IRuleContextApplicable
+        public static RuleExprAst<S, RuleExprContext> ApplyTransform<T, S, RuleExprContext>(this RuleExprAst<T, RuleExprContext> expr, Expression<Func<(Option<T>,RuleExprContext),(Option<S>,RuleExprContext)>> transform)
         {
             var context = Expression.Parameter(typeof(RuleExprContext), "context");
 
             var valueOptionAndContextAVar = Expression.Variable(typeof((Option<T>, RuleExprContext)), "valueOptionAndContextAVar");
-            var valueOptionAVar = Expression.Variable(typeof(Option<T>), "valueOptionAVar");
-            var contextAVar = Expression.Variable(typeof(RuleExprContext), "contextAVar");
 
             var functionImplementation =
                 Expression.Block(
                     Expression.Assign(valueOptionAndContextAVar, Expression.Invoke(expr.Expression, context)),
-                    Expression.Assign(valueOptionAVar, Expression.Field(valueOptionAndContextAVar, "Item1")),
-                    Expression.Assign(contextAVar, Expression.Field(valueOptionAndContextAVar, "Item2")),
-                    Expression.Condition(
-                        Expression.Equal(Expression.Field(valueOptionAVar, "isSome"), Expression.Constant(true)),
-                        MkTuple<Option<Unit>, RuleExprContext>(
-                            WrapSome<Unit>(Expression.Constant(Unit.Value)),
-                            Expression.Call(
-                                Expression.Field(valueOptionAVar, "value"),
-                                typeof(IRuleContextApplicable).GetMethod("ApplyTo").MakeGenericMethod(typeof(RuleExprContext)),
-                                contextAVar
-                            )
-                        ),
-                        MkTuple<Option<Unit>, RuleExprContext>(
-                            GetNoneValue<Unit>(),
-                            contextAVar
-                        )
-                    )
+                    Expression.Invoke(transform, valueOptionAndContextAVar)
                 );
 
             var functionBody =
                 Expression.Block(
-                    new[] { valueOptionAndContextAVar, valueOptionAVar, contextAVar },
+                    new[] { valueOptionAndContextAVar },
                     functionImplementation
                 );
 
-            var function = Expression.Lambda<RuleExpr<Unit, RuleExprContext>>(functionBody, context);
-            return new RuleExprAst<Unit, RuleExprContext> { Expression = function };
+            var function = Expression.Lambda<RuleExpr<S, RuleExprContext>>(functionBody, context);
+            return new RuleExprAst<S, RuleExprContext> { Expression = function };
+        }
+
+        public static RuleExprAst<Unit, RuleExprContext> Apply<RuleExprContext>(this RuleExprAst<Amount, RuleExprContext> expr) where RuleExprContext : RuleExprContextBase
+        {
+            return expr.ApplyTransform(valueOptionAndContext => Tuple.Create(valueOptionAndContext.Item1, (RuleExprContext)valueOptionAndContext.Item2.WithNewAmount(valueOptionAndContext.Item1)).ToValueTuple() ).Select(_ => Unit.Value);
+        }
+
+        public static RuleExprAst<Unit, RuleExprContext> Apply<RuleExprContext>(this RuleExprAst<PassUnit, RuleExprContext> expr)
+        {
+            return expr.ApplyTransform(valueOptionAndContext => valueOptionAndContext).Select(_ => Unit.Value);
+        }
+
+        public static RuleExprAst<PassUnit, RuleExprContext> Apply<RuleExprContext>(this RuleExprAst<FailUnit, RuleExprContext> expr)
+        {
+            return expr.ApplyTransform(valueOptionAndContext => Tuple.Create(valueOptionAndContext.Item1.isSome ? Option<PassUnit>.None : Option<PassUnit>.Some(PassUnit.Value), valueOptionAndContext.Item2).ToValueTuple());
         }
 
         public static RuleExprAst<T, RuleExprContext> Join<T,RuleExprContext>(this IEnumerable<RuleExprAst<T, RuleExprContext>> ruleExprAsts)
