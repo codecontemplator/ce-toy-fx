@@ -366,7 +366,7 @@ namespace ce_toy_fx
 
         public static RuleExprAst<Unit, RuleExprContext> Apply<RuleExprContext>(this RuleExprAst<Amount, RuleExprContext> expr) where RuleExprContext : RuleExprContextBase
         {
-            return expr.ApplyTransform((_,valueOptionAndContext) => Tuple.Create(valueOptionAndContext.Item1, (RuleExprContext)valueOptionAndContext.Item2.WithNewAmount(valueOptionAndContext.Item1)).ToValueTuple() ).Select(_ => Unit.Value);
+            return expr.ApplyTransform((_,valueOptionAndContext) => Tuple.Create(Option<Unit>.Some(Unit.Value), (RuleExprContext)valueOptionAndContext.Item2.WithNewAmount(valueOptionAndContext.Item1)).ToValueTuple());
         }
 
         public static RuleExprAst<Unit, RuleExprContext> Apply<RuleExprContext>(this RuleExprAst<PassUnit, RuleExprContext> expr)

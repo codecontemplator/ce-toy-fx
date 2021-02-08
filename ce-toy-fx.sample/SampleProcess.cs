@@ -21,6 +21,17 @@ namespace ce_toy_fx.sample
                 ).Apply();
         }
 
+        private static RuleDef MaxAmountForAge(int amountLimit, int ageLimit)
+        {
+            return
+                (
+                    from amount in Dsl.GetAmount<Unit>()
+                    from ages in Variables.Age.Values
+                    where ages.Max() < ageLimit
+                    select new Amount(Math.Min(amount, amountLimit))
+                ).Apply();
+        }
+
         private static RuleDef MaxTotalDebt(double debtLimit)
         {
             return
@@ -128,6 +139,8 @@ namespace ce_toy_fx.sample
                     LiftPostitivePolicy(18, 100, 2).LogContext("LiftPolicy(+)"),
                     LiftNegativePolicy(18, 100, 2).LogContext("LiftPolicy(-)"),
                     AbsoluteMaxAmount(100).LogContext("AbsoluteMaxAmount"),
+                    MaxAmountForAge(90, 71).LogContext("MaxAmountForAge 1"),
+                    MaxAmountForAge(50, 50).LogContext("MaxAmountForAge 2"),
                     MaxTotalDebt(50).LogContext("MaxTotalDebt"),
                     PrimaryApplicantMustHaveAddress().LogContext("PrimaryApplicantMustHaveAddress"),
                     CreditScoreUnderLimit(0.9).LogContext("CreditScoreUnderLimit"),
