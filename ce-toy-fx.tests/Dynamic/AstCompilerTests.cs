@@ -103,7 +103,7 @@ namespace ce_toy_fx.tests
                         new SRuleDef
                         {
                             Name = "srule 2",
-                            Condition = "Amount < 1000",
+                            Condition = "Vars.Amount < 1000",
                             Projection = new Projection { Type = ProjectionType.PolicyAccept },
                             VariableReferences = new string[] { "Amount" }
                         }
