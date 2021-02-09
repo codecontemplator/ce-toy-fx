@@ -12,15 +12,19 @@ namespace ce_toy_fx
 
     public static class RuleExtensions
     {
-        public static Process CompileToProcess(this IEnumerable<RuleExprAst<Unit, RuleExprContext<Unit>>> ruleAsts, string name)
+        public static Process CompileToProcess(this RuleExprAst<Unit, RuleExprContext<Unit>> ruleAst, string name)
         {
-            var ruleAst = ruleAsts.Join();
             return new Process
             {
                 Name = name,
                 Keys = ruleAst.GetKeys().ToImmutableList(),
                 RuleExpr = ruleAst.Compile()
             };
+        }
+
+        public static Process CompileToProcess(this IEnumerable<RuleExprAst<Unit, RuleExprContext<Unit>>> ruleAsts, string name)
+        {
+            return ruleAsts.Join().CompileToProcess(name);
         }
     }
 }

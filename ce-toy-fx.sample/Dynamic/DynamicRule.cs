@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using ce_toy_fx.sample.Dynamic;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.IO;
@@ -6,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Text;
 
 namespace ce_toy_fx.sample
 {
@@ -25,26 +27,42 @@ namespace ce_toy_fx.sample
         }
     }
 
-    class DynamicRule
+    public class DynamicRule
     {
-        //private readonly PortableExecutableReference[] References;
-        //private readonly string StandardHeader;
-
-        //private static readonly Assembly SystemRuntime = Assembly.Load(new AssemblyName("System.Runtime"));
-        //private static readonly Assembly NetStandard = Assembly.Load(new AssemblyName("netstandard"));
-
-        public DynamicRule() //IEnumerable<Type> referencedTypes, IEnumerable<string> usings)
+        public static Process CreateFromAst(AstNode n)
         {
-            //References = GetReferences(new[] { typeof(object) } );
+            var sb = new StringBuilder();
+            sb.AppendLine(@"
+using ce_toy_fx.sample.VariableTypes;
+using System;
+using System.Linq;
 
-            //StandardHeader = GetUsingStatements(usings);
+namespace ce_toy_fx.sample
+{
+    using RuleDef = RuleExprAst<Unit, RuleExprContext<Unit>>;
+
+    class SampleProcessDynamic
+    {
+        public static Process GetProcess()
+        {
+            return
+            ");
+
+            var compiler = new AstCompiler();
+            n.Accept(compiler);
+            sb.AppendLine(compiler.ToString());
+
+            sb.AppendLine(@"
+                .CompileToProcess(""Sample process"");
         }
-        public static Process CreateFromString(string program) //string lambda)
-        {
-            //var returnTypeAsString = GetCSharpRepresentation(typeof(T), true);
-            //string outerClass = "public class Wrapper { public static int DoStuff() { return 1+2; } }"; //  StandardHeader + $"public static class Wrapper {{ public static {returnTypeAsString} expr = {lambda}; }}";
+    }
+}
+");
+            return CreateFromString(sb.ToString());
+        }
 
-            //The location of the .NET assemblies
+        public static Process CreateFromString(string program)
+        {
             var systemPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
 
             var compilation = CSharpCompilation.Create(
