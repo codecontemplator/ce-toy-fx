@@ -163,7 +163,6 @@ namespace ce_toy_fx.sample.Dynamic
             mruleDef.Condition?.Accept(this);
             mruleDef.Projection.Accept(this);
 
-            //_stringBuilder.AppendLine(".Lift()");
             if (!string.IsNullOrEmpty(mruleDef.Name))
             {
                 _stringBuilder.Append($".LogContext(\"").Append(mruleDef.Name).AppendLine("\")");
