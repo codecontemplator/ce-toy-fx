@@ -1,6 +1,8 @@
 ﻿using ce_toy_fx.sample;
 using ce_toy_fx.sample.Dynamic;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -8,13 +10,6 @@ namespace ce_toy_fx.tests.Dynamic
 {
     public class DynamicRuleTests
     {
-        private readonly ITestOutputHelper output;
-
-        public DynamicRuleTests(ITestOutputHelper output)
-        {
-            this.output = output;
-        }
-
         [Fact]
         public void Test()
         {
@@ -34,7 +29,7 @@ namespace ce_toy_fx.tests.Dynamic
                     {
                         Name = "Child rule 2",
                         Condition = "Vars.Age.Max() < 35",
-                        Projection = new Projection { Value = "Math.Min(Vars.Amount, 2000)", Type = ProjectionType.Amount },
+                        Projection = new Projection { Value = "Math.Min(Vars.Amount, 500)", Type = ProjectionType.Amount },
                         VariableReferences = new string[] { "Age", "Amount" }
                     }
                 }
@@ -43,6 +38,39 @@ namespace ce_toy_fx.tests.Dynamic
             var process = DynamicRule.CreateFromAst(sampleProcessAst);
 
             Assert.NotNull(process);
+
+            Assert.Equal(1, process.Keys.Count);
+            Assert.Equal("Age", process.Keys[0]);
+
+            var applicants = new List<Applicant>
+            {
+                new Applicant
+                {
+                    Id = "a1",
+                    KeyValueMap = new Dictionary<string,object>
+                    {
+                        { "Age", 25 }
+                    }.ToImmutableDictionary()
+                },
+                new Applicant
+                {
+                    Id = "a2",
+                    KeyValueMap = new Dictionary<string,object>
+                    {
+                        { "Age", 45 }
+                    }.ToImmutableDictionary()
+                }
+            };
+
+            var evalResult = process.RuleExpr(new RuleExprContext<Unit>
+            {
+                Log = ImmutableList<LogEntry>.Empty,
+                Amount = 1500,
+                Applicants = applicants.ToDictionary(x => x.Id).ToImmutableDictionary()
+            });
+
+            Assert.True(evalResult.Item1.isSome);
+            Assert.Equal(1000, evalResult.Item2.Amount);
         }
     }
 }
