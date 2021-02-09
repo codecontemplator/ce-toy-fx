@@ -17,7 +17,7 @@ namespace ce_toy_fx.tests
 
         [Theory]
         [InlineData(ProjectionType.Amount, "new Amount(x)")]
-        [InlineData(ProjectionType.PolicyAccept, "PassUnit.Value")]
+        [InlineData(ProjectionType.Accept, "PassUnit.Value")]
         public void CompileProjectionAmount(ProjectionType type, string expectedProjection)
         {
             var projection = new Projection { Value = "x", Type = type };
@@ -97,14 +97,14 @@ namespace ce_toy_fx.tests
                         {
                             Name = "srule 1",
                             Condition = "Vars.Salary < 1000 && Vars.Age < 25",
-                            Projection = new Projection { Type = ProjectionType.PolicyAccept },
+                            Projection = new Projection { Type = ProjectionType.Accept },
                             VariableReferences = new string[] { "Salary", "Age" }
                         },
                         new SRuleDef
                         {
                             Name = "srule 2",
                             Condition = "Vars.Amount < 1000",
-                            Projection = new Projection { Type = ProjectionType.PolicyAccept },
+                            Projection = new Projection { Type = ProjectionType.Accept },
                             VariableReferences = new string[] { "Amount" }
                         }
                     }

@@ -36,7 +36,7 @@ namespace ce_toy_fx.sample.Dynamic
 
     public enum ProjectionType
     {
-        Amount, PolicyAccept
+        Amount, Accept
     }
     public class Projection : AstNode
     {
@@ -146,7 +146,7 @@ namespace ce_toy_fx.sample.Dynamic
                 case ProjectionType.Amount:
                     _stringBuilder.Append($"new Amount({projection.Value})");
                     break;
-                case ProjectionType.PolicyAccept:
+                case ProjectionType.Accept:
                     _stringBuilder.Append("PassUnit.Value");
                     break;
                 default:
