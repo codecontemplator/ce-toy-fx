@@ -118,5 +118,43 @@ namespace ce_toy_fx.tests
             output.WriteLine(code);
             Assert.NotNull(code);
         }
+
+        [Fact]
+        public void CompileSCase()
+        {
+            var case1 = new SRuleDef
+            {
+                Name = "case 1",
+                Condition = "Vars.Salary > 1000",
+                Projection = new Projection { Type = ProjectionType.Accept },
+                VariableReferences = new string[] { "Salary" }
+            };
+
+            var case2 = new SRuleDef
+            {
+                Name = "case 2",
+                Condition = "Vars.Salary > 1500",
+                Projection = new Projection { Type = ProjectionType.Accept },
+                VariableReferences = new string[] { "Salary" }
+            };
+
+            var sCaseRule = new SRuleCase
+            {
+                Name = "scase rule",
+                Variable = "Age",
+                Children = new List<(Condition, SRule)>
+                {
+                    ("Vars.Age < 18", case1),
+                    ("Vars.Age >= 18", case2)
+                }
+            };
+
+            var compiler = new AstCompiler();
+            sCaseRule.Accept(compiler);
+
+            var code = compiler.ToString();
+            output.WriteLine(code);
+            Assert.NotNull(code);
+        }
     }
 }
