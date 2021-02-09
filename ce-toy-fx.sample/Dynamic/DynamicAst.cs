@@ -8,10 +8,13 @@ namespace ce_toy_fx.sample.Dynamic
     public abstract class AstVisitor
     {
         public virtual void Visit(Condition condition) { }
-        public virtual void Visit(Projection condition) { }
-        public virtual void Visit(MRuleDef condition) { }
-        public virtual void Visit(MRuleJoin condition) { }
-        public virtual void Visit(MRuleCase condition) { }
+        public virtual void Visit(Projection projection) { }
+        public virtual void Visit(MRuleDef mruleDef) { }
+        public virtual void Visit(MRuleJoin mruleJoin) { }
+        public virtual void Visit(MRuleCase mCase) { }
+        public virtual void Visit(SRuleLift sLift) { }
+        public virtual void Visit(SRuleDef sRuleDef) { }
+        public virtual void Visit(SRuleJoin sRuleJoin) { }
     }
 
     public interface AstNode
@@ -87,6 +90,45 @@ namespace ce_toy_fx.sample.Dynamic
         }
     }
 
+    public class SRuleLift : MRule
+    {
+        public SRule Child { get; set; }
+
+        public override void Accept(AstVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+    }
+
+    public abstract class SRule : AstNode
+    {
+        public abstract void Accept(AstVisitor visitor);
+    }
+
+    public class SRuleDef : SRule
+    {
+        public string Name { get; set; }
+        public Condition Condition { get; set; }
+        public Projection Projection { get; set; }
+        public string[] VariableReferences { get; set; }
+
+        public override void Accept(AstVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+    }
+
+    public class SRuleJoin : SRule
+    {
+        public string Name { get; set; }
+        public List<SRule> Children { get; set; }
+
+        public override void Accept(AstVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+    }
+
     public class AstCompiler : AstVisitor
     {
         private StringBuilder _stringBuilder = new StringBuilder();
@@ -132,7 +174,7 @@ namespace ce_toy_fx.sample.Dynamic
 
         public override void Visit(MRuleJoin joinRule)
         {
-            _stringBuilder.AppendLine("new RuleDef[] {");
+            _stringBuilder.AppendLine("new RuleExprAst<Unit, RuleExprContext<Unit>>[] {");
             foreach(var (childrule, i) in joinRule.Children.Select((x,i) => (x,i)))
             {
                 if (i > 0)
@@ -144,6 +186,50 @@ namespace ce_toy_fx.sample.Dynamic
             _stringBuilder.Append("}.Join()");
             if (!string.IsNullOrEmpty(joinRule.Name))
                 _stringBuilder.Append($".LogContext(\"").Append(joinRule.Name).Append("\")");
+            _stringBuilder.AppendLine();
+        }
+
+        public override void Visit(MRuleCase mCase)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Visit(SRuleLift sRuleLift)
+        {
+            sRuleLift.Child.Accept(this);
+            _stringBuilder.AppendLine(".Lift()");
+        }
+
+        public override void Visit(SRuleDef sRuleDef)
+        {
+            _stringBuilder.AppendLine("(");
+            _stringBuilder.Append(GenerateVariableContext(sRuleDef.VariableReferences, false));
+
+            sRuleDef.Condition?.Accept(this);
+            sRuleDef.Projection.Accept(this);
+
+            if (!string.IsNullOrEmpty(sRuleDef.Name))
+            {
+                _stringBuilder.Append($".LogContext(\"").Append(sRuleDef.Name).AppendLine("\")");
+            }
+
+            _stringBuilder.AppendLine(").Apply()");
+        }
+
+        public override void Visit(SRuleJoin sRuleJoin)
+        {
+            _stringBuilder.AppendLine("new RuleExprAst<Unit, RuleExprContext<string>>[] {");
+            foreach (var (childrule, i) in sRuleJoin.Children.Select((x, i) => (x, i)))
+            {
+                if (i > 0)
+                    _stringBuilder.AppendLine(",");
+
+                childrule.Accept(this);
+            }
+
+            _stringBuilder.Append("}.Join()");
+            if (!string.IsNullOrEmpty(sRuleJoin.Name))
+                _stringBuilder.Append($".LogContext(\"").Append(sRuleJoin.Name).Append("\")");
             _stringBuilder.AppendLine();
         }
 

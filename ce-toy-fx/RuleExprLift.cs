@@ -11,12 +11,18 @@ namespace ce_toy_fx
         private class VoteMethods
         {
             public static Option<PassUnit> AllShouldPass(IEnumerable<Option<PassUnit>> input) => input.Any(x => !x.isSome) ? Option<PassUnit>.None : Option<PassUnit>.Some(PassUnit.Value);
+            public static Option<Unit> AllShouldPass(IEnumerable<Option<Unit>> input) => input.Any(x => !x.isSome) ? Option<Unit>.None : Option<Unit>.Some(Unit.Value);
             public static Option<FailUnit> NoneShouldPass(IEnumerable<Option<FailUnit>> input) => input.Any(x => x.isSome) ? Option<FailUnit>.None : Option<FailUnit>.Some(FailUnit.Value);
             public static Option<T> MinValue<T>(IEnumerable<Option<T>> input)
             {
                 var values = input.Where(x => x.isSome).Select(x => x.value).ToList();
                 return values.Any() ? Option<T>.Some(values.Min()) : Option<T>.None;
             }
+        }
+
+        public static RuleExprAst<Unit, RuleExprContext<Unit>> Lift(this RuleExprAst<Unit, RuleExprContext<string>> sRuleExprAst)
+        {
+            return sRuleExprAst.Lift(VoteMethods.AllShouldPass);
         }
 
         public static RuleExprAst<Unit, RuleExprContext<Unit>> Lift(this RuleExprAst<PassUnit, RuleExprContext<string>> sRuleExprAst)

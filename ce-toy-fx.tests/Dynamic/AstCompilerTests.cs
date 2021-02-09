@@ -82,5 +82,41 @@ namespace ce_toy_fx.tests
             output.WriteLine(code);
             Assert.NotNull(code);
         }
+
+        [Fact]
+        public void CompileSRule()
+        {
+            var liftedrule = new SRuleLift
+            {
+                Child = new SRuleJoin
+                {
+                    Name = "Srule group",
+                    Children = new List<SRule>
+                    {
+                        new SRuleDef
+                        {
+                            Name = "srule 1",
+                            Condition = "Vars.Salary < 1000 && Vars.Age < 25",
+                            Projection = new Projection { Type = ProjectionType.PolicyAccept },
+                            VariableReferences = new string[] { "Salary", "Age" }
+                        },
+                        new SRuleDef
+                        {
+                            Name = "srule 2",
+                            Condition = "Amount < 1000",
+                            Projection = new Projection { Type = ProjectionType.PolicyAccept },
+                            VariableReferences = new string[] { "Amount" }
+                        }
+                    }
+                }
+            };
+
+            var compiler = new AstCompiler();
+            liftedrule.Accept(compiler);
+
+            var code = compiler.ToString();
+            output.WriteLine(code);
+            Assert.NotNull(code);
+        }
     }
 }
