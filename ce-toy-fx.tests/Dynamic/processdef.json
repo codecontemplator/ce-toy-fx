@@ -1,0 +1,31 @@
+{
+  "name": "Sample process",
+  "type": "MRuleJoin",
+  "children": [
+    {
+      "name": "Absolute max amount",
+      "type": "MRuleDef",
+      "projection": "Math.Min(Vars.Amount, 100)"
+    },
+    {
+      "name": "MinTotalSalary",
+      "type": "MRuleDef",
+      "condition": "Salary.Sum() > 50",
+      "projectionType": "Policy"
+    },
+    {
+      "type": "SRuleLift",
+      "child": {
+        "type": "SRuleJoin",
+        "children": [
+          {
+            "name": "",
+            "type": "SRuleDef",
+            "condition": "Vars.CreditA + Vars.CreditB < 50",
+            "projectionType": "Policy"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -22,15 +22,13 @@ namespace ce_toy_fx.tests.Dynamic
                     {
                         Name = "Child rule 1",
                         Condition = "Vars.Age.Max() < 55",
-                        Projection = new Projection { Value = "Math.Min(Vars.Amount, 1000)", Type = ProjectionType.Amount },
-                        VariableReferences = new string[] { "Age", "Amount" }
+                        Projection = new Projection { Value = "Math.Min(Vars.Amount, 1000)", ProjectionType = ProjectionType.Amount },
                     },
                     new MRuleDef
                     {
                         Name = "Child rule 2",
                         Condition = "Vars.Age.Max() < 35",
-                        Projection = new Projection { Value = "Math.Min(Vars.Amount, 500)", Type = ProjectionType.Amount },
-                        VariableReferences = new string[] { "Age", "Amount" }
+                        Projection = new Projection { Value = "Math.Min(Vars.Amount, 500)", ProjectionType = ProjectionType.Amount },
                     }
                 }
             };

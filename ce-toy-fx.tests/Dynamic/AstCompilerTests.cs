@@ -17,10 +17,10 @@ namespace ce_toy_fx.tests
 
         [Theory]
         [InlineData(ProjectionType.Amount, "new Amount(x)")]
-        [InlineData(ProjectionType.Accept, "PassUnit.Value")]
+        [InlineData(ProjectionType.Policy, "PassUnit.Value")]
         public void CompileProjectionAmount(ProjectionType type, string expectedProjection)
         {
-            var projection = new Projection { Value = "x", Type = type };
+            var projection = new Projection { Value = "x", ProjectionType = type };
 
             var compiler = new AstCompiler();
             projection.Accept(compiler);
@@ -38,8 +38,8 @@ namespace ce_toy_fx.tests
             {
                 Name = "Test rule",
                 Condition = "Vars.Age.Max() < 55",
-                Projection = new Projection { Value = "Math.Min(Vars.Amount, 1000)", Type = ProjectionType.Amount },
-                VariableReferences = new string[] { "Age", "Amount" }
+                Projection = new Projection { Value = "Math.Min(Vars.Amount, 1000)", ProjectionType = ProjectionType.Amount },
+                //VariableReferences = new string[] { "Age", "Amount" }
             };
 
             var compiler = new AstCompiler();
@@ -62,15 +62,13 @@ namespace ce_toy_fx.tests
                     {
                         Name = "Child rule 1",
                         Condition = "Vars.Age.Max() < 55",
-                        Projection = new Projection { Value = "Math.Min(Vars.Amount, 1000)", Type = ProjectionType.Amount },
-                        VariableReferences = new string[] { "Age", "Amount" }
+                        Projection = new Projection { Value = "Math.Min(Vars.Amount, 1000)", ProjectionType = ProjectionType.Amount },
                     },
                     new MRuleDef
                     {
                         Name = "Child rule 2",
                         Condition = "Vars.Age.Max() < 35",
-                        Projection = new Projection { Value = "Math.Min(Vars.Amount, 2000)", Type = ProjectionType.Amount },
-                        VariableReferences = new string[] { "Age", "Amount" }
+                        Projection = new Projection { Value = "Math.Min(Vars.Amount, 2000)", ProjectionType = ProjectionType.Amount },
                     }
                 }
             };
@@ -97,15 +95,13 @@ namespace ce_toy_fx.tests
                         {
                             Name = "srule 1",
                             Condition = "Vars.Salary < 1000 && Vars.Age < 25",
-                            Projection = new Projection { Type = ProjectionType.Accept },
-                            VariableReferences = new string[] { "Salary", "Age" }
+                            Projection = new Projection { ProjectionType = ProjectionType.Policy },
                         },
                         new SRuleDef
                         {
                             Name = "srule 2",
                             Condition = "Vars.Amount < 1000",
-                            Projection = new Projection { Type = ProjectionType.Accept },
-                            VariableReferences = new string[] { "Amount" }
+                            Projection = new Projection { ProjectionType = ProjectionType.Policy },
                         }
                     }
                 }
@@ -126,16 +122,14 @@ namespace ce_toy_fx.tests
             {
                 Name = "case 1",
                 Condition = "Vars.Salary > 1000",
-                Projection = new Projection { Type = ProjectionType.Accept },
-                VariableReferences = new string[] { "Salary" }
+                Projection = new Projection { ProjectionType = ProjectionType.Policy },
             };
 
             var case2 = new SRuleDef
             {
                 Name = "case 2",
                 Condition = "Vars.Salary > 1500",
-                Projection = new Projection { Type = ProjectionType.Accept },
-                VariableReferences = new string[] { "Salary" }
+                Projection = new Projection { ProjectionType = ProjectionType.Policy },
             };
 
             var sCaseRule = new SRuleCase

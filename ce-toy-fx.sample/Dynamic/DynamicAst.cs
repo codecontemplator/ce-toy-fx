@@ -26,6 +26,9 @@ namespace ce_toy_fx.sample.Dynamic
     {
         public string Value { get; set; }
 
+        [Newtonsoft.Json.JsonIgnore]
+        public string[] Variables => VariableContainerHelper.GetVariablesFromString(Value);
+
         public void Accept(AstVisitor visitor)
         {
             visitor.Visit(this);
@@ -36,7 +39,7 @@ namespace ce_toy_fx.sample.Dynamic
 
     public enum ProjectionType
     {
-        Amount, Accept
+        Amount, Policy
     }
     public class Projection : AstNode
     {
@@ -47,7 +50,10 @@ namespace ce_toy_fx.sample.Dynamic
             visitor.Visit(this);
         }
 
-        public ProjectionType Type { get; set; }
+        [Newtonsoft.Json.JsonIgnore]
+        public string[] Variables => VariableContainerHelper.GetVariablesFromString(Value);
+
+        public ProjectionType ProjectionType { get; set; }
     }
 
     public abstract class MRule : AstNode
@@ -61,7 +67,8 @@ namespace ce_toy_fx.sample.Dynamic
         public string Name { get; set; }
         public Condition Condition { get; set; }
         public Projection Projection { get; set; }
-        public string[] VariableReferences { get; set; }
+
+        public string[] Variables => Projection.Variables.Union(Condition?.Variables).ToArray();
 
         public override void Accept(AstVisitor visitor)
         {
@@ -100,7 +107,7 @@ namespace ce_toy_fx.sample.Dynamic
         public string Name { get; set; }
         public Condition Condition { get; set; }
         public Projection Projection { get; set; }
-        public string[] VariableReferences { get; set; }
+        public string[] VariableReferences => Projection.Variables.Union(Condition?.Variables).ToArray();
 
         public override void Accept(AstVisitor visitor)
         {
@@ -144,12 +151,12 @@ namespace ce_toy_fx.sample.Dynamic
         public override void Visit(Projection projection)
         {
             _stringBuilder.Append(".Select(Vars => ");
-            switch(projection.Type)
+            switch(projection.ProjectionType)
             {
                 case ProjectionType.Amount:
                     _stringBuilder.Append($"new Amount({projection.Value})");
                     break;
-                case ProjectionType.Accept:
+                case ProjectionType.Policy:
                     _stringBuilder.Append("PassUnit.Value");
                     break;
                 default:
@@ -161,7 +168,7 @@ namespace ce_toy_fx.sample.Dynamic
         public override void Visit(MRuleDef mruleDef)
         {
             _stringBuilder.AppendLine("(");
-            _stringBuilder.Append(GenerateVariableContext(mruleDef.VariableReferences, true));
+            _stringBuilder.Append(GenerateVariableContext(mruleDef.Variables, true));
 
             mruleDef.Condition?.Accept(this);
             mruleDef.Projection.Accept(this);
