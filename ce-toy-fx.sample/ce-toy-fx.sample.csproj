@@ -16,10 +16,4 @@
     <ProjectReference Include="..\ce-toy-fx\ce-toy-fx.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="SampleProcessDynamic.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>
