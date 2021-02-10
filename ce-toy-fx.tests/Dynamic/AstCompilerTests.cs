@@ -28,7 +28,7 @@ namespace ce_toy_fx.tests
             var code = compiler.ToString();
             output.WriteLine(code);
             Assert.NotNull(code);
-            Assert.Equal($".Select(Vars => {expectedProjection})\r\n", code);
+            Assert.Equal($".Select(Vars => {expectedProjection})", code.TrimEnd());
         }
 
         [Fact]
