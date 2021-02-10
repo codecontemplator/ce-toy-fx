@@ -35,6 +35,13 @@ namespace ce_toy_fx.sample.Dynamic
         }
 
         public static implicit operator Condition(string s) => new Condition { Value = s };
+
+        public override bool Equals(object obj)
+        {
+            return 
+                obj is Condition && 
+                (bool)(((Condition)obj).Value?.Equals(Value));
+        }
     }
 
     public enum ProjectionType
@@ -54,6 +61,14 @@ namespace ce_toy_fx.sample.Dynamic
         public string[] Variables => VariableContainerHelper.GetVariablesFromString(Value);
 
         public ProjectionType ProjectionType { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            return
+                obj is Projection &&
+                (bool)(((Projection)obj).Value?.Equals(Value)) &&
+                ((Projection)obj).ProjectionType.Equals(ProjectionType);
+        }
     }
 
     public abstract class MRule : AstNode
