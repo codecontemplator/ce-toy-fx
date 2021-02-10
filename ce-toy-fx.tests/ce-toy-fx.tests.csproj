@@ -9,10 +9,14 @@
 
   <ItemGroup>
     <None Remove="Dynamic\processdef.json" />
+    <None Remove="Dynamic\SampleProcessDynamic.txt" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Dynamic\processdef.json" />
+    <EmbeddedResource Include="Dynamic\Data\processdef.json" />
+    <EmbeddedResource Include="Dynamic\Data\SampleProcessDynamic.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
@@ -23,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ce-toy-fx.sample\ce-toy-fx.sample.csproj" />
+    <ProjectReference Include="..\ce-toy-fx.dynamic\ce-toy-fx.dynamic.csproj" />
   </ItemGroup>
 
 </Project>

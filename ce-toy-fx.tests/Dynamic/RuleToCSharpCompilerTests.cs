@@ -1,17 +1,27 @@
 ﻿using ce_toy_fx.sample;
 using ce_toy_fx.sample.Dynamic;
+using ce_toy_fx.tests.Data;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace ce_toy_fx.tests.Dynamic
 {
-    public class DynamicRuleTests
+    public class RuleToCSharpCompilerTests
     {
         [Fact]
-        public void Test()
+        public void TestCompileSource()
+        {
+            var program = GetSourceCode();
+            var process = RuleToCSharpCompiler.CreateFromString(program, typeof(Variables));
+            Assert.NotNull(process);
+        }
+
+        [Fact]
+        public void TestCompileAst()
         {
             var sampleProcessAst = new MRuleJoin
             {
@@ -33,7 +43,7 @@ namespace ce_toy_fx.tests.Dynamic
                 }
             };
 
-            var process = DynamicRule.CreateFromAst(sampleProcessAst);
+            var process = RuleToCSharpCompiler.CreateFromAst(sampleProcessAst, typeof(Variables));
 
             Assert.NotNull(process);
 
@@ -69,6 +79,18 @@ namespace ce_toy_fx.tests.Dynamic
 
             Assert.True(evalResult.Item1.isSome);
             Assert.Equal(1000, evalResult.Item2.Amount);
+        }
+
+        private string GetSourceCode()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceName = "ce_toy_fx.tests.Dynamic.Data.SampleProcessDynamic.txt";
+
+            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                return reader.ReadToEnd();
+            }
         }
     }
 }

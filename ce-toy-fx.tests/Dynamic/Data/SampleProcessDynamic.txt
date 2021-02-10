@@ -1,12 +1,13 @@
-﻿using ce_toy_fx.sample.VariableTypes;
+﻿using ce_toy_fx.tests.Data;
+using ce_toy_fx.tests.Data.VariableTypes;
 using System;
 using System.Linq;
 
-namespace ce_toy_fx.sample
+namespace ce_toy_fx.dynamic
 {
     using RuleDef = RuleExprAst<Unit, RuleExprContext<Unit>>;
 
-    class SampleProcess
+    class DynamicProcess
     {
         private static readonly PassUnit passed = PassUnit.Value;
         private static readonly FailUnit rejected = FailUnit.Value;

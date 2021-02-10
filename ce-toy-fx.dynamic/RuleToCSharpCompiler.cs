@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -27,21 +28,22 @@ namespace ce_toy_fx.sample
         }
     }
 
-    public class DynamicRule
+    public class RuleToCSharpCompiler
     {
-        public static Process CreateFromAst(AstNode n)
+        public static Process CreateFromAst(AstNode n, params Type[] types)  // TODO: parameterize usings
         {
             var sb = new StringBuilder();
             sb.AppendLine(@"
-using ce_toy_fx.sample.VariableTypes;
+using ce_toy_fx.tests.Data;
+using ce_toy_fx.tests.Data.VariableTypes;
 using System;
 using System.Linq;
 
-namespace ce_toy_fx.sample
+namespace ce_toy_fx.dynamic
 {
     using RuleDef = RuleExprAst<Unit, RuleExprContext<Unit>>;
 
-    class SampleProcessDynamic
+    class DynamicProcess
     {
         public static Process GetProcess()
         {
@@ -58,17 +60,15 @@ namespace ce_toy_fx.sample
     }
 }
 ");
-            return CreateFromString(sb.ToString());
+            return CreateFromString(sb.ToString(), types);
         }
 
-        public static Process CreateFromString(string program)
+        public static Process CreateFromString(string program, params Type[] types)
         {
             var systemPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
 
-            var compilation = CSharpCompilation.Create(
-                "DynamicRuleCompiler_" + Guid.NewGuid(),
-                new[] { CSharpSyntaxTree.ParseText(program) },
-                new[] { 
+            var metaDataRefs = new List<MetadataReference>
+            {
                     MetadataReference.CreateFromFile(typeof(Object).Assembly.Location),
                     MetadataReference.CreateFromFile(Path.Combine(systemPath, "mscorlib.dll")),
                     MetadataReference.CreateFromFile(Path.Combine(systemPath, "System.dll")),
@@ -77,8 +77,18 @@ namespace ce_toy_fx.sample
                     MetadataReference.CreateFromFile(Path.Combine(systemPath, "System.Linq.dll")),
                     MetadataReference.CreateFromFile(typeof(Applicant).Assembly.Location),
                     MetadataReference.CreateFromFile(typeof(Expression).Assembly.Location),
-                    MetadataReference.CreateFromFile(typeof(DynamicRule).Assembly.Location)
-                },
+//                    MetadataReference.CreateFromFile(typeof(DynamicRule).Assembly.Location)
+            };
+
+            foreach(var type in types)
+            {
+                metaDataRefs.Add(MetadataReference.CreateFromFile(type.Assembly.Location));
+            }
+
+            var compilation = CSharpCompilation.Create(
+                "DynamicRuleCompiler_" + Guid.NewGuid(),
+                new[] { CSharpSyntaxTree.ParseText(program) },
+                metaDataRefs.ToArray(),
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
             using var assemblyLoadContext = new CollectibleAssemblyLoadContext();
@@ -94,7 +104,7 @@ namespace ce_toy_fx.sample
             ms.Seek(0, SeekOrigin.Begin);
             var assembly = assemblyLoadContext.LoadFromStream(ms);
 
-            var outerClassType = assembly.GetType("ce_toy_fx.sample.SampleProcessDynamic");
+            var outerClassType = assembly.GetType("ce_toy_fx.dynamic.DynamicProcess");
 
             var exprField = outerClassType.GetMethod("GetProcess", BindingFlags.Public | BindingFlags.Static);
             var result = exprField.Invoke(null, null);

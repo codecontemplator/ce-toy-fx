@@ -52,7 +52,7 @@ namespace ce_toy_fx.tests.Dynamic
         private string GetJsonData()
         {
             var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = "ce_toy_fx.tests.Dynamic.processdef.json";
+            var resourceName = "ce_toy_fx.tests.Dynamic.Data.processdef.json";
 
             using (Stream stream = assembly.GetManifestResourceStream(resourceName))
             using (StreamReader reader = new StreamReader(stream))
