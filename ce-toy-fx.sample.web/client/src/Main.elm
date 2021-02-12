@@ -16,6 +16,7 @@ import Bootstrap.Form.Radio as Radio
 import Bootstrap.Form.Textarea as Textarea
 import Bootstrap.Form.Fieldset as Fieldset
 import Html.Attributes exposing (hidden)
+import Html.Attributes exposing (selected)
 
 -- https://github.com/evancz/elm-todomvc/blob/master/src/Main.elm
 
@@ -30,7 +31,7 @@ type RuleType = Limit | Policy | Group | Vote
 type RuleScope = AllApplicants | AnyApplicant
 type Rule = Rule { type_ : RuleType, name : String, condition : String, projection : String, children : List Rule, scope : RuleScope }
 
-type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType
+type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope
 
 update : AppMsg -> AppModel -> AppModel
 update msg model =
@@ -50,6 +51,11 @@ update msg model =
     UpdateRuleType id newType ->
       let
         updateNode (TreeNode n (Rule r)) = if id == n.id then TreeNode n (Rule { r | type_ = newType }) else TreeNode n (Rule r)
+      in
+        { model | process = List.map updateNode model.process }
+    UpdateRuleScope id newScope -> 
+      let
+        updateNode (TreeNode n (Rule r)) = if id == n.id then TreeNode n (Rule { r | scope = newScope }) else TreeNode n (Rule r)
       in
         { model | process = List.map updateNode model.process }
 
@@ -81,10 +87,10 @@ viewRuleList ruleList =
                   [ Form.group []
                       [ Form.label [ Html.Attributes.for "rule-type-selector" ] [ text "Rule type" ]
                       , Select.select [ Select.id "rule-type-selector", Select.onChange updateRuleType]
-                          [ Select.item [] [ text "Policy"]
-                          , Select.item [] [ text "Limit"]
-                          , Select.item [] [ text "Group"]
-                          , Select.item [] [ text "Vote"]
+                          [ Select.item [ selected (rule.type_ == Policy) ] [ text "Policy"]
+                          , Select.item [ selected (rule.type_ == Limit) ] [ text "Limit"]
+                          , Select.item [ selected (rule.type_ == Group) ] [ text "Group"]
+                          , Select.item [ selected (rule.type_ == Vote) ] [ text "Vote"]
                           ]
                       ]
                   , Form.group [ Form.attrs [ Html.Attributes.hidden (List.member rule.type_ [ Policy, Limit ] |> not) ] ]
@@ -92,11 +98,17 @@ viewRuleList ruleList =
                       , Input.text [ Input.id "rule-condition" ]
                       , Form.help [] [ text "Example: Vars.Credit < 1000 && Vars.Age >= 20" ]
                       ]
-                  , Form.group []
+                  , Form.group [ Form.attrs [ Html.Attributes.hidden (List.member rule.type_ [ Limit ] |> not) ] ]
                       [ Form.label [Html.Attributes.for "rule-projection" ] [ text "Projection"]
                       , Input.text [ Input.id "rule-projection" ]
                       , Form.help [] [ text "Example: Vars.Amount - Vars.Credit" ]
                       ]
+                  , Checkbox.checkbox 
+                      [ Checkbox.id "rule-scope-all-applicants"
+                      , Checkbox.onCheck (\b -> UpdateRuleScope node.id (if b then AllApplicants else AnyApplicant))
+                      , Checkbox.attrs [ Html.Attributes.disabled (List.member rule.type_ [ Policy ] |> not) ]
+                      , Checkbox.checked (rule.scope == AllApplicants)
+                      ] "Applies to all applicants"
                   ]                
                 ]
               else [ ]                
