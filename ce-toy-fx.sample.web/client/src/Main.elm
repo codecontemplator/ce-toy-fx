@@ -54,12 +54,7 @@ update msg model =
       UpdateRuleScope id newScope ->  
         updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | scope = newScope }))
       AddSubRule id ->
-        let
-          name = "new child rule"
-          mrule = Rule { type_ = Limit, name = name, condition = "<condition>", projection = "<projection>", scope = AllApplicants }
-          node = TreeNode { id = model.nextId, header = name, isExpanded = False, children = [] } mrule
-        in
-          updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | children = n.children ++ [mkRuleNode ()] } pl) |> increaseId
+        updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | children = n.children ++ [mkRuleNode ()] } pl) |> increaseId
 
 view : AppModel -> Html AppMsg
 view model =
