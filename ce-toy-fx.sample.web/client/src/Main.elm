@@ -17,6 +17,7 @@ import Bootstrap.Form.Textarea as Textarea
 import Bootstrap.Form.Fieldset as Fieldset
 import Html.Attributes exposing (hidden)
 import Html.Attributes exposing (selected)
+import Html.Attributes
 
 -- https://github.com/evancz/elm-todomvc/blob/master/src/Main.elm
 
@@ -29,9 +30,9 @@ type TreeNode a = TreeNode { header : String, isExpanded : Bool, id : Int } a
 
 type RuleType = Limit | Policy | Group | Vote
 type RuleScope = AllApplicants | AnyApplicant
-type Rule = Rule { type_ : RuleType, name : String, condition : String, projection : String, children : List Rule, scope : RuleScope }
+type Rule = Rule { type_ : RuleType, name : String, condition : String, projection : String, children : List (TreeNode Rule), scope : RuleScope }
 
-type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope
+type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope | AddSubRule Int
 
 update : AppMsg -> AppModel -> AppModel
 update msg model =
@@ -56,6 +57,14 @@ update msg model =
     UpdateRuleScope id newScope -> 
       let
         updateNode (TreeNode n (Rule r)) = if id == n.id then TreeNode n (Rule { r | scope = newScope }) else TreeNode n (Rule r)
+      in
+        { model | process = List.map updateNode model.process }
+    AddSubRule id ->
+      let
+        name = "new child rule"
+        mrule = Rule { type_ = Limit, name = name, condition = "<condition>", projection = "<projection>", children = [], scope = AllApplicants }
+        node = TreeNode { id = model.nextId, header = name, isExpanded = False } mrule
+        updateNode (TreeNode n (Rule r)) = if id == n.id then TreeNode n (Rule { r | children = r.children ++ [node] }) else TreeNode n (Rule r)
       in
         { model | process = List.map updateNode model.process }
 
@@ -109,7 +118,14 @@ viewRuleList ruleList =
                       , Checkbox.attrs [ Html.Attributes.disabled (List.member rule.type_ [ Policy ] |> not) ]
                       , Checkbox.checked (rule.scope == AllApplicants)
                       ] "Applies to all applicants"
-                  ]                
+                  ]
+                , button 
+                    [ class "btn"
+                    , class "btn-primary"
+                    , Html.Attributes.style "margin-top" "20px"
+                    , Html.Attributes.hidden (List.member rule.type_ [ Group, Vote ] |> not)
+                    , onClick (AddSubRule node.id)
+                    ] [ text "Add Sub Rule"]                
                 ]
               else [ ]                
           in
@@ -117,14 +133,10 @@ viewRuleList ruleList =
               , Html.li [ class "list-group-item" ] 
                 [ Grid.container [] 
                     (
-                      [ Grid.simpleRow 
-                        [ Grid.col [ Col.xsAuto ] [ button [ class "btn", class "btn-lnk", onClick (ToggleTreeNode node.id) ] [ Html.h4 [] [ text rule.name ] ] ] 
---                          , Grid.col [ ] [ ]
---                          , Grid.col [ Col.xsAuto ] [ button [ onClick (ToggleTreeNode node.id)] [ text (if node.isExpanded then "Collapse" else "Expand") ] ] 
-                        ]
-                      , Grid.simpleRow 
-                        [ Grid.col [] viewRuleDetails ] 
-                        ]
+                      [ Grid.simpleRow [ Grid.col [ Col.xsAuto ] [ button [ class "btn", class "btn-lnk", onClick (ToggleTreeNode node.id) ] [ Html.h4 [] [ text rule.name ] ] ] ]
+                      , Grid.simpleRow [ Grid.col [] viewRuleDetails ] 
+                      , Grid.simpleRow [ Grid.col [] [ viewRuleList rule.children ]  ]
+                      ]
                     )
                 ]
               )
