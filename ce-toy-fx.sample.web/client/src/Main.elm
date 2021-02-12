@@ -27,47 +27,39 @@ main =
 
 type alias AppModel = { process : List (TreeNode Rule), nextId : Int }
 
-type TreeNode a = TreeNode { header : String, isExpanded : Bool, id : Int } a
+type TreeNode a = TreeNode { header : String, isExpanded : Bool, id : Int, children : List (TreeNode a) } a
 
 type RuleType = Limit | Policy | Group | Vote
 type RuleScope = AllApplicants | AnyApplicant
-type Rule = Rule { type_ : RuleType, name : String, condition : String, projection : String, children : List (TreeNode Rule), scope : RuleScope }
+type Rule = Rule { type_ : RuleType, name : String, condition : String, projection : String, scope : RuleScope }
 
 type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope | AddSubRule Int
 
 update : AppMsg -> AppModel -> AppModel
 update msg model =
-  case msg of
-    AddRule ->
-      let
-        name = "new rule"
-        mrule = Rule { type_ = Limit, name = name, condition = "<condition>", projection = "<projection>", children = [], scope = AllApplicants }
-        node = TreeNode { id = model.nextId, header = name, isExpanded = False } mrule
-      in
-        { model | nextId = model.nextId + 1, process = model.process ++ [ node ] }
-    ToggleTreeNode id -> 
-      let
-        updateNode (TreeNode n pl) = if id == n.id then TreeNode { n | isExpanded = not n.isExpanded } pl else TreeNode n pl
-      in
-        { model | process = List.map updateNode model.process }
-    UpdateRuleType id newType ->
-      let
-        updateNode (TreeNode n (Rule r)) = if id == n.id then TreeNode n (Rule { r | type_ = newType }) else TreeNode n (Rule r)
-      in
-        { model | process = List.map updateNode model.process }
-    UpdateRuleScope id newScope -> 
-      let
-        updateNode (TreeNode n (Rule r)) = if id == n.id then TreeNode n (Rule { r | scope = newScope }) else TreeNode n (Rule r)
-      in
-        { model | process = List.map updateNode model.process }
-    AddSubRule id ->
-      let
-        name = "new child rule"
-        mrule = Rule { type_ = Limit, name = name, condition = "<condition>", projection = "<projection>", children = [], scope = AllApplicants }
-        node = TreeNode { id = model.nextId, header = name, isExpanded = False } mrule
-        updateNode (TreeNode n (Rule r)) = if id == n.id then TreeNode n (Rule { r | children = r.children ++ [node] }) else TreeNode n (Rule r)
-      in
-        { model | process = List.map updateNode model.process }
+  let
+    mapTree f (TreeNode n pl) = f (TreeNode { n | children = List.map (mapTree f) n.children } pl)
+    updateProcess f = { model | process = List.map (mapTree f) model.process }
+    updateNodeWithId id f = updateProcess (\(TreeNode n pl) -> if id == n.id then f (TreeNode n pl) else TreeNode n pl)
+    increaseId appModel = { appModel | nextId = appModel.nextId + 1}
+    mkRuleNode () = let name = "new rule" in TreeNode { id = model.nextId, header = name, isExpanded = False, children = [] } (Rule { type_ = Limit, name = name, condition = "<condition>", projection = "<projection>", scope = AllApplicants })
+  in
+    case msg of
+      AddRule ->
+        { model | nextId = model.nextId + 1, process = model.process ++ [ mkRuleNode () ] }
+      ToggleTreeNode id -> 
+        updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | isExpanded =  not n.isExpanded } pl)
+      UpdateRuleType id newType ->
+        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | type_ = newType }))
+      UpdateRuleScope id newScope ->  
+        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | scope = newScope }))
+      AddSubRule id ->
+        let
+          name = "new child rule"
+          mrule = Rule { type_ = Limit, name = name, condition = "<condition>", projection = "<projection>", scope = AllApplicants }
+          node = TreeNode { id = model.nextId, header = name, isExpanded = False, children = [] } mrule
+        in
+          updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | children = n.children ++ [mkRuleNode ()] } pl) |> increaseId
 
 view : AppModel -> Html AppMsg
 view model =
@@ -141,7 +133,7 @@ viewRuleList ruleList =
                     (
                       [ Grid.simpleRow [ Grid.col [ Col.xsAuto ] [ button [ class "btn", class "btn-lnk", onClick (ToggleTreeNode node.id) ] [ Html.h4 [] [ text rule.name ] ] ] ]
                       , Grid.simpleRow [ Grid.col [] viewRuleDetails ] 
-                      , Grid.simpleRow [ Grid.col [] [ viewRuleList rule.children ]  ]
+                      , Grid.simpleRow [ Grid.col [] [ viewRuleList node.children ]  ]
                       ]
                     )
                 ]
