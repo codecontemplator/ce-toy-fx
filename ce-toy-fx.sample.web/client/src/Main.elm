@@ -10,29 +10,29 @@ import Html.Keyed as Keyed
 -- https://github.com/evancz/elm-todomvc/blob/master/src/Main.elm
 
 main =
-  Browser.sandbox { init = { process = [] }, update = update, view = view }
+  Browser.sandbox { init = { process = [], nextId = 0 }, update = update, view = view }
 
-type alias AppModel = { process : List MRule }
+type alias AppModel = { process : List MRule, nextId : Int }
 
 type MRule = MRuleDef { id : Int, name : String, condition : String, projection : String }
            | MRuleGroup { name : String }
 
-type AppMsg = AddMRule MRule
+type AppMsg = AddMRuleDef
 
 update : AppMsg -> AppModel -> AppModel
 update msg model =
   case msg of
-    AddMRule mrule ->
-      { model | process = model.process ++ [mrule] }
+    AddMRuleDef ->
+      let
+        mrule = MRuleDef { id = model.nextId, name = "new rule", condition = "", projection = "" }
+      in
+        { model | nextId = model.nextId + 1, process = model.process ++ [mrule] }
 
 view : AppModel -> Html AppMsg
 view model =
-    let 
-        addRule = AddMRule (MRuleDef { id = 1, name = "rule", condition = "", projection = ""})
-    in
         div []
             [ Bootstrap.stylesheet
-            , button [ type_ "button", class "btn btn-primary", onClick addRule ] [ text "Add Rule" ]
+            , button [ type_ "button", class "btn btn-primary", onClick AddMRuleDef ] [ text "Add Rule" ]
             , div [] [ viewRuleList model.process ]
             ]
 
