@@ -128,8 +128,7 @@ viewRuleList ruleList =
                     (
                       [ Grid.simpleRow [ Grid.col [ Col.xsAuto ] [ button [ class "btn", class "btn-lnk", onClick (ToggleTreeNode node.id) ] [ Html.h4 [] [ text rule.name ] ] ] ]
                       , Grid.simpleRow [ Grid.col [] viewRuleDetails ] 
-                      , Grid.simpleRow [ Grid.col [] [ viewRuleList node.children ]  ]
-                      ]
+                      ] ++ (if List.isEmpty node.children || not (List.member rule.type_ [ Group ]) then [] else [ Grid.simpleRow [ Grid.col [] [ viewRuleList node.children ] ] ])
                     )
                 ]
               )
