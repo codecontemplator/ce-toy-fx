@@ -18,6 +18,7 @@ import Bootstrap.Form.Fieldset as Fieldset
 import Html.Attributes exposing (hidden)
 import Html.Attributes exposing (selected)
 import Html.Attributes
+import Html.Attributes exposing (style)
 
 -- https://github.com/evancz/elm-todomvc/blob/master/src/Main.elm
 
@@ -119,13 +120,18 @@ viewRuleList ruleList =
                       , Checkbox.checked (rule.scope == AllApplicants)
                       ] "Applies to all applicants"
                   ]
-                , button 
-                    [ class "btn"
-                    , class "btn-primary"
-                    , Html.Attributes.style "margin-top" "20px"
-                    , Html.Attributes.hidden (List.member rule.type_ [ Group, Vote ] |> not)
-                    , onClick (AddSubRule node.id)
-                    ] [ text "Add Sub Rule"]                
+                , Grid.container [ style "margin-top" "20px", style "margin-bottom" "20px" ]
+                  [ Grid.simpleRow 
+                      [ Grid.col [] 
+                          [ button 
+                              [ class "btn"
+                              , class "btn-primary"
+                              , Html.Attributes.hidden (List.member rule.type_ [ Group, Vote ] |> not)
+                              , onClick (AddSubRule node.id)
+                              ] [ text "Add Sub Rule"]                
+                          ]
+                      ]
+                  ]
                 ]
               else [ ]                
           in
