@@ -69,7 +69,7 @@ view model =
         Grid.container []
           [ CDN.stylesheet
             , Grid.simpleRow [ Grid.col [] [ viewProcessHeader model.process  ] ]
-            , Grid.simpleRow [ Grid.col [] [ viewRuleList model.process ] ]
+            , Grid.simpleRow [ Grid.col [] [ viewProcessDetails model.process ] ]
           ]
 
 viewProcessHeader process = 
@@ -92,8 +92,8 @@ onEnter msg =
         Html.Events.on "keydown" (Json.andThen isEnter Html.Events.keyCode)
 
 -- http://elm-bootstrap.info/form
-viewRuleList : List (TreeNode Rule) -> Html AppMsg
-viewRuleList ruleList = 
+viewProcessDetails : List (TreeNode Rule) -> Html AppMsg
+viewProcessDetails process = 
     let
         viewKeydRule : (TreeNode Rule) -> (String, Html AppMsg)
         viewKeydRule (TreeNode node (Rule rule)) = 
@@ -171,11 +171,11 @@ viewRuleList ruleList =
                           [ Row.attrs 
                               [ Html.Attributes.hidden (not (List.member rule.type_ [ Group ]) || not node.isExpanded) ]
                           ] 
-                          [ Grid.col [] [ viewRuleList node.children ] ]
+                          [ Grid.col [] [ viewProcessDetails node.children ] ]
                       ]
                     )
                 ]
               )
     in
         Keyed.ul [ class "list-group" ] <|
-                List.map viewKeydRule ruleList
+                List.map viewKeydRule process
