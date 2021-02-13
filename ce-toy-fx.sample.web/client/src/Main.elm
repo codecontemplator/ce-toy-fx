@@ -13,6 +13,7 @@ import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Form.Checkbox as Checkbox
+import Bootstrap.General.HAlign as HAlign
 -- import Bootstrap.Form.Radio as Radio
 -- import Bootstrap.Form.Textarea as Textarea
 -- import Bootstrap.Form.Fieldset as Fieldset
@@ -67,9 +68,17 @@ view : AppModel -> Html AppMsg
 view model =
         Grid.container []
           [ CDN.stylesheet
-            , Grid.simpleRow [ Grid.col [] [ button [ type_ "button", class "btn btn-primary", onClick AddRule ] [ text "Add Rule" ] ] ]
+            , Grid.simpleRow [ Grid.col [] [ viewProcessHeader model.process  ] ]
             , Grid.simpleRow [ Grid.col [] [ viewRuleList model.process ] ]
           ]
+
+viewProcessHeader process = 
+  Grid.container [ style "margin-top" "20px", style "margin-bottom" "20px" ] 
+    [ Grid.row [ Row.betweenXs ] 
+        [ Grid.col [ Col.xs4 ] [ Html.h2 [] [ text "Process" ] ]
+        , Grid.col [ Col.xs4 ] [ button [ type_ "button", class "btn btn-primary", onClick AddRule ] [ text "Add Rule" ] ]
+        ]
+    ]
 
 onEnter : msg -> Html.Attribute msg
 onEnter msg =
