@@ -27,9 +27,10 @@ import Json.Decode as Json
 -- https://github.com/evancz/elm-todomvc/blob/master/src/Main.elm
 
 main =
-  Browser.sandbox { init = { process = [], nextId = 0 }, update = update, view = view }
+  Browser.sandbox { init = { process = [], processView = UI, nextId = 0 }, update = update, view = view }
 
-type alias AppModel = { process : List (TreeNode Rule), nextId : Int }
+type ProcessView = UI | Raw
+type alias AppModel = { process : List (TreeNode Rule), processView : ProcessView, nextId : Int }
 
 type TreeNode a = TreeNode { header : String, isExpanded : Bool, id : Int, children : List (TreeNode a), isHeaderEditEnabled : Bool } a
 
@@ -37,7 +38,7 @@ type RuleType = Limit | Policy | Group | Vote
 type RuleScope = AllApplicants | AnyApplicant
 type Rule = Rule { type_ : RuleType, name : String, condition : String, projection : String, scope : RuleScope }
 
-type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope | AddSubRule Int | ToggleEditHeader Int | NewHeaderValue Int String
+type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope | AddSubRule Int | ToggleEditHeader Int | NewHeaderValue Int String | ToggleProcessView
 
 update : AppMsg -> AppModel -> AppModel
 update msg model =
@@ -63,20 +64,24 @@ update msg model =
         updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | isHeaderEditEnabled = not n.isHeaderEditEnabled } pl)
       NewHeaderValue id value ->
         updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode { n | header = value } (Rule { r | name = value }))
+      ToggleProcessView -> { model | processView = if model.processView == UI then Raw else UI }
 
 view : AppModel -> Html AppMsg
 view model =
         Grid.container []
           [ CDN.stylesheet
-            , Grid.simpleRow [ Grid.col [] [ viewProcessHeader model.process  ] ]
-            , Grid.simpleRow [ Grid.col [] [ viewProcessDetails model.process ] ]
+            , Grid.simpleRow [ Grid.col [] [ viewProcessHeader model  ] ]
+            , Grid.simpleRow [ Grid.col [] [ viewProcessDetails model ] ]
           ]
 
-viewProcessHeader process = 
+viewProcessHeader : AppModel -> Html AppMsg
+viewProcessHeader model = 
   Grid.container [ style "margin-top" "20px", style "margin-bottom" "20px" ] 
-    [ Grid.row [ Row.betweenXs ] 
-        [ Grid.col [ Col.xs4 ] [ Html.h2 [] [ text "Process" ] ]
-        , Grid.col [ Col.xs4 ] [ button [ type_ "button", class "btn btn-primary", onClick AddRule ] [ text "Add Rule" ] ]
+    [ Grid.row [ ] 
+        [ Grid.col [ Col.xsAuto ] [ Html.h2 [] [ text "Process" ] ]
+        , Grid.col [ ] []
+        , Grid.col [ Col.xsAuto ] [ button [ type_ "button", class "btn btn-primary", onClick AddRule ] [ text "Add Rule" ] ]
+        , Grid.col [ Col.xsAuto ] [ button [ type_ "button", class "btn btn-primary", onClick ToggleProcessView ] [ text (if model.processView == UI then "View Raw" else "View UI") ] ]
         ]
     ]
 
@@ -91,9 +96,16 @@ onEnter msg =
     in
         Html.Events.on "keydown" (Json.andThen isEnter Html.Events.keyCode)
 
+
+viewProcessDetails : AppModel -> Html AppMsg
+viewProcessDetails model = if model.processView == UI then viewProcessDetailsUI model.process else viewProcessDetailsRaw model.process 
+
+viewProcessDetailsRaw : List (TreeNode Rule) -> Html AppMsg
+viewProcessDetailsRaw process = div [] [ text "raw" ]
+
 -- http://elm-bootstrap.info/form
-viewProcessDetails : List (TreeNode Rule) -> Html AppMsg
-viewProcessDetails process = 
+viewProcessDetailsUI : List (TreeNode Rule) -> Html AppMsg
+viewProcessDetailsUI process = 
     let
         viewKeydRule : (TreeNode Rule) -> (String, Html AppMsg)
         viewKeydRule (TreeNode node (Rule rule)) = 
@@ -171,7 +183,7 @@ viewProcessDetails process =
                           [ Row.attrs 
                               [ Html.Attributes.hidden (not (List.member rule.type_ [ Group ]) || not node.isExpanded) ]
                           ] 
-                          [ Grid.col [] [ viewProcessDetails node.children ] ]
+                          [ Grid.col [] [ viewProcessDetailsUI node.children ] ]
                       ]
                     )
                 ]
