@@ -7,18 +7,21 @@ import Html.Events exposing (onClick)
 import Html.Keyed as Keyed
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
+import Bootstrap.Grid.Row as Row
 import Bootstrap.CDN as CDN
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Form.Checkbox as Checkbox
-import Bootstrap.Form.Radio as Radio
-import Bootstrap.Form.Textarea as Textarea
-import Bootstrap.Form.Fieldset as Fieldset
+-- import Bootstrap.Form.Radio as Radio
+-- import Bootstrap.Form.Textarea as Textarea
+-- import Bootstrap.Form.Fieldset as Fieldset
 import Html.Attributes exposing (hidden)
 import Html.Attributes exposing (selected)
 import Html.Attributes
 import Html.Attributes exposing (style)
+import Html.Events exposing (onDoubleClick)
+import Json.Decode as Json
 
 -- https://github.com/evancz/elm-todomvc/blob/master/src/Main.elm
 
@@ -27,13 +30,13 @@ main =
 
 type alias AppModel = { process : List (TreeNode Rule), nextId : Int }
 
-type TreeNode a = TreeNode { header : String, isExpanded : Bool, id : Int, children : List (TreeNode a) } a
+type TreeNode a = TreeNode { header : String, isExpanded : Bool, id : Int, children : List (TreeNode a), isHeaderEditEnabled : Bool } a
 
 type RuleType = Limit | Policy | Group | Vote
 type RuleScope = AllApplicants | AnyApplicant
 type Rule = Rule { type_ : RuleType, name : String, condition : String, projection : String, scope : RuleScope }
 
-type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope | AddSubRule Int
+type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope | AddSubRule Int | ToggleEditHeader Int | NewHeaderValue Int String
 
 update : AppMsg -> AppModel -> AppModel
 update msg model =
@@ -42,7 +45,7 @@ update msg model =
     updateProcess f = { model | process = List.map (mapTree f) model.process }
     updateNodeWithId id f = updateProcess (\(TreeNode n pl) -> if id == n.id then f (TreeNode n pl) else TreeNode n pl)
     increaseId appModel = { appModel | nextId = appModel.nextId + 1}
-    mkRuleNode () = let name = "new rule" in TreeNode { id = model.nextId, header = name, isExpanded = False, children = [] } (Rule { type_ = Limit, name = name, condition = "<condition>", projection = "<projection>", scope = AllApplicants })
+    mkRuleNode () = let name = "new rule" in TreeNode { id = model.nextId, header = name, isExpanded = False, children = [], isHeaderEditEnabled = False } (Rule { type_ = Limit, name = name, condition = "<condition>", projection = "<projection>", scope = AllApplicants })
   in
     case msg of
       AddRule ->
@@ -55,6 +58,10 @@ update msg model =
         updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | scope = newScope }))
       AddSubRule id ->
         updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | children = n.children ++ [mkRuleNode ()] } pl) |> increaseId
+      ToggleEditHeader id ->
+        updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | isHeaderEditEnabled = not n.isHeaderEditEnabled } pl)
+      NewHeaderValue id value ->
+        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode { n | header = value } (Rule { r | name = value }))
 
 view : AppModel -> Html AppMsg
 view model =
@@ -63,6 +70,17 @@ view model =
             , Grid.simpleRow [ Grid.col [] [ button [ type_ "button", class "btn btn-primary", onClick AddRule ] [ text "Add Rule" ] ] ]
             , Grid.simpleRow [ Grid.col [] [ viewRuleList model.process ] ]
           ]
+
+onEnter : msg -> Html.Attribute msg
+onEnter msg =
+    let
+        isEnter code =
+            if code == 13 then
+                Json.succeed msg
+            else
+                Json.fail "not ENTER"
+    in
+        Html.Events.on "keydown" (Json.andThen isEnter Html.Events.keyCode)
 
 -- http://elm-bootstrap.info/form
 viewRuleList : List (TreeNode Rule) -> Html AppMsg
@@ -80,7 +98,7 @@ viewRuleList ruleList =
               )
             viewRuleDetails =
               if node.isExpanded then
-                [ Form.form [] 
+                [ Form.form [ style "margin-top" "20px" ]
                   [ Form.group []
                       [ Form.label [ Html.Attributes.for "rule-type-selector" ] [ text "Rule type" ]
                       , Select.select [ Select.id "rule-type-selector", Select.onChange updateRuleType]
@@ -120,13 +138,25 @@ viewRuleList ruleList =
                       ]
                   ]
                 ]
-              else [ ]                
+              else [ ]         
+            ruleHeader = 
+              if node.isHeaderEditEnabled then
+                [ Input.text 
+                    [ Input.id "node-header"
+                    , Input.value node.header
+                    , Input.attrs [ style "margin-bottom" "10px", style "margin-top" "10px" ]
+                    , Input.attrs [ onEnter (ToggleEditHeader node.id) ] 
+                    , Input.onInput (NewHeaderValue node.id)
+                    ] 
+                ] 
+              else
+                [ button [ class "btn", class "btn-lnk", onClick (ToggleTreeNode node.id) ] [ Html.h4 [] [ text rule.name ] ] ]
           in
               ( String.fromInt node.id
               , Html.li [ class "list-group-item" ] 
                 [ Grid.container [] 
                     (
-                      [ Grid.simpleRow [ Grid.col [ Col.xsAuto ] [ button [ class "btn", class "btn-lnk", onClick (ToggleTreeNode node.id) ] [ Html.h4 [] [ text rule.name ] ] ] ]
+                      [ Grid.row [ Row.attrs [ onDoubleClick (ToggleEditHeader node.id), style "background" "lightgrey" ] ] [ Grid.col [ Col.xsAuto ] ruleHeader ]
                       , Grid.simpleRow [ Grid.col [] viewRuleDetails ] 
                       ] ++ (if List.isEmpty node.children || not (List.member rule.type_ [ Group ]) then [] else [ Grid.simpleRow [ Grid.col [] [ viewRuleList node.children ] ] ])
                     )
