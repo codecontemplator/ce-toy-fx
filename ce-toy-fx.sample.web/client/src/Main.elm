@@ -45,7 +45,7 @@ update msg model =
     updateProcess f = { model | process = List.map (mapTree f) model.process }
     updateNodeWithId id f = updateProcess (\(TreeNode n pl) -> if id == n.id then f (TreeNode n pl) else TreeNode n pl)
     increaseId appModel = { appModel | nextId = appModel.nextId + 1}
-    mkRuleNode () = let name = "new rule" in TreeNode { id = model.nextId, header = name, isExpanded = False, children = [], isHeaderEditEnabled = False } (Rule { type_ = Limit, name = name, condition = "<condition>", projection = "<projection>", scope = AllApplicants })
+    mkRuleNode () = let name = ("Rule " ++ String.fromInt model.nextId) in TreeNode { id = model.nextId, header = name, isExpanded = False, children = [], isHeaderEditEnabled = False } (Rule { type_ = Limit, name = name, condition = "<condition>", projection = "<projection>", scope = AllApplicants })
   in
     case msg of
       AddRule ->
