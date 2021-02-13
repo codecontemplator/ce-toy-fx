@@ -22,7 +22,10 @@ import Html.Attributes exposing (selected)
 import Html.Attributes
 import Html.Attributes exposing (style)
 import Html.Events exposing (onDoubleClick)
-import Json.Decode as Json
+import Json.Decode as Decode
+import Json.Encode as Encode
+import Maybe.Extra
+import Html
 
 -- https://github.com/evancz/elm-todomvc/blob/master/src/Main.elm
 
@@ -34,11 +37,12 @@ type alias AppModel = { process : List (TreeNode Rule), processView : ProcessVie
 
 type TreeNode a = TreeNode { header : String, isExpanded : Bool, id : Int, children : List (TreeNode a), isHeaderEditEnabled : Bool } a
 
-type RuleType = Limit | Policy | Group | Vote
+type RuleType = Limit | Policy | Group
 type RuleScope = AllApplicants | AnyApplicant
 type Rule = Rule { type_ : RuleType, name : String, condition : String, projection : String, scope : RuleScope }
 
-type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope | AddSubRule Int | ToggleEditHeader Int | NewHeaderValue Int String | ToggleProcessView
+type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope | AddSubRule Int | ToggleEditHeader Int | NewHeaderValue Int String | ToggleProcessView | RuleConditionUpdated Int String
+    | RuleProjectionUpdated Int String
 
 update : AppMsg -> AppModel -> AppModel
 update msg model =
@@ -64,7 +68,12 @@ update msg model =
         updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | isHeaderEditEnabled = not n.isHeaderEditEnabled } pl)
       NewHeaderValue id value ->
         updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode { n | header = value } (Rule { r | name = value }))
-      ToggleProcessView -> { model | processView = if model.processView == UI then Raw else UI }
+      ToggleProcessView -> 
+        { model | processView = if model.processView == UI then Raw else UI }
+      RuleConditionUpdated id newCondition ->
+        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | condition = newCondition }))
+      RuleProjectionUpdated id newProjection ->
+        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | projection = newProjection }))
 
 view : AppModel -> Html AppMsg
 view model =
@@ -90,18 +99,59 @@ onEnter msg =
     let
         isEnter code =
             if code == 13 then
-                Json.succeed msg
+                Decode.succeed msg
             else
-                Json.fail "not ENTER"
+                Decode.fail "not ENTER"
     in
-        Html.Events.on "keydown" (Json.andThen isEnter Html.Events.keyCode)
+        Html.Events.on "keydown" (Decode.andThen isEnter Html.Events.keyCode)
 
 
 viewProcessDetails : AppModel -> Html AppMsg
 viewProcessDetails model = if model.processView == UI then viewProcessDetailsUI model.process else viewProcessDetailsRaw model.process 
 
 viewProcessDetailsRaw : List (TreeNode Rule) -> Html AppMsg
-viewProcessDetailsRaw process = div [] [ text "raw" ]
+viewProcessDetailsRaw process = 
+  let 
+    encodeRule : TreeNode Rule -> Encode.Value
+    encodeRule (TreeNode n (Rule r)) = 
+      case r.type_ of
+        Group -> 
+          encodeRuleList (Just r.name) n.children
+        Policy -> 
+          Encode.object 
+            [
+              ("name", Encode.string r.name),
+              ("type", Encode.string "MRuleDef"),
+              ("condition", Encode.string r.condition),
+              ("projection", Encode.object [ ("projectionType", Encode.string "Policy") ])
+            ]
+        Limit ->
+          Encode.object 
+            [
+              ("name", Encode.string r.name),
+              ("type", Encode.string "MRuleDef"),
+              ("condition", Encode.string r.condition),
+              ("projection", 
+                  Encode.object 
+                    [ ("projectionType", Encode.string "Amount") 
+                    , ("value", Encode.string r.projection)
+                    ]
+              )
+            ]
+    encodeRuleList : Maybe String -> List (TreeNode Rule) -> Encode.Value
+    encodeRuleList maybeName rules = 
+        let
+            joined = Encode.object ([ ("type", Encode.string "SRuleJoin"), ("children", Encode.list encodeRule rules) ] ++ Maybe.Extra.toList (Maybe.map (\s -> ("name", Encode.string s)) maybeName))
+            perApplicant = List.any (\(TreeNode _ (Rule child)) -> child.scope == AnyApplicant) rules
+        in        
+          if perApplicant then
+            Encode.object [ ("type", Encode.string "SRuleLift"), ("child", joined)]
+          else
+            joined
+    json : String
+    json = encodeRuleList Nothing process |> Encode.encode 4
+  in
+    Html.pre [] [ text json ]
 
 -- http://elm-bootstrap.info/form
 viewProcessDetailsUI : List (TreeNode Rule) -> Html AppMsg
@@ -114,8 +164,7 @@ viewProcessDetailsUI process =
                 case s of
                   "Policy" -> Policy
                   "Limit" -> Limit 
-                  "Group" -> Group
-                  _ -> Vote
+                  _ -> Group
               )
             viewRuleDetails =
               if node.isExpanded then
@@ -126,17 +175,16 @@ viewProcessDetailsUI process =
                           [ Select.item [ selected (rule.type_ == Policy) ] [ text "Policy"]
                           , Select.item [ selected (rule.type_ == Limit) ] [ text "Limit"]
                           , Select.item [ selected (rule.type_ == Group) ] [ text "Group"]
-                          , Select.item [ selected (rule.type_ == Vote) ] [ text "Vote"]
                           ]
                       ]
                   , Form.group [ Form.attrs [ Html.Attributes.hidden (List.member rule.type_ [ Policy, Limit ] |> not) ] ]
                       [ Form.label [Html.Attributes.for "rule-condition" ] [ text "Condition"]
-                      , Input.text [ Input.id "rule-condition" ]
+                      , Input.text [ Input.id "rule-condition", Input.onInput (RuleConditionUpdated node.id), Input.value rule.condition ]
                       , Form.help [] [ text "Example: Vars.Credit < 1000 && Vars.Age >= 20" ]
                       ]
                   , Form.group [ Form.attrs [ Html.Attributes.hidden (List.member rule.type_ [ Limit ] |> not) ] ]
                       [ Form.label [Html.Attributes.for "rule-projection" ] [ text "Projection"]
-                      , Input.text [ Input.id "rule-projection" ]
+                      , Input.text [ Input.id "rule-projection", Input.onInput (RuleProjectionUpdated node.id), Input.value rule.projection ]
                       , Form.help [] [ text "Example: Vars.Amount - Vars.Credit" ]
                       ]
                   , Checkbox.checkbox 
@@ -152,7 +200,7 @@ viewProcessDetailsUI process =
                           [ button 
                               [ class "btn"
                               , class "btn-primary"
-                              , Html.Attributes.hidden (List.member rule.type_ [ Group, Vote ] |> not)
+                              , Html.Attributes.hidden (List.member rule.type_ [ Group ] |> not)
                               , onClick (AddSubRule node.id)
                               ] [ text "Add Sub Rule"]                
                           ]
