@@ -158,7 +158,12 @@ viewRuleList ruleList =
                     (
                       [ Grid.row [ Row.attrs [ onDoubleClick (ToggleEditHeader node.id), style "background" "lightgrey" ] ] [ Grid.col [ Col.xsAuto ] ruleHeader ]
                       , Grid.simpleRow [ Grid.col [] viewRuleDetails ] 
-                      ] ++ (if List.isEmpty node.children || not (List.member rule.type_ [ Group ]) then [] else [ Grid.simpleRow [ Grid.col [] [ viewRuleList node.children ] ] ])
+                      , Grid.row 
+                          [ Row.attrs 
+                              [ Html.Attributes.hidden (not (List.member rule.type_ [ Group ]) || not node.isExpanded) ]
+                          ] 
+                          [ Grid.col [] [ viewRuleList node.children ] ]
+                      ]
                     )
                 ]
               )
