@@ -144,13 +144,13 @@ viewRuleList ruleList =
                 [ Input.text 
                     [ Input.id "node-header"
                     , Input.value node.header
-                    , Input.attrs [ style "margin-bottom" "10px", style "margin-top" "10px" ]
+                    , Input.attrs [ style "margin-bottom" "10px", style "margin-top" "10px", style "font-size" "24px", style "font-weight" "500" ]
                     , Input.attrs [ onEnter (ToggleEditHeader node.id) ] 
                     , Input.onInput (NewHeaderValue node.id)
                     ] 
                 ] 
               else
-                [ button [ class "btn", class "btn-lnk", onClick (ToggleTreeNode node.id) ] [ Html.h4 [] [ text rule.name ] ] ]
+                [ Html.label [ class "btn", class "btn-lnk", onClick (ToggleTreeNode node.id), style "margin-top" "10px" ] [ Html.h4 [] [ text rule.name ] ] ]
           in
               ( String.fromInt node.id
               , Html.li [ class "list-group-item" ] 
