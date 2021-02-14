@@ -34,7 +34,7 @@ encodeRule (TreeNode n (Rule r)) =
 encodeRuleList : Maybe String -> List (TreeNode Rule) -> Encode.Value
 encodeRuleList maybeName rules = 
     let
-        joined = Encode.object ([ ("type", Encode.string "SRuleJoin"), ("children", Encode.list encodeRule rules) ] ++ Maybe.Extra.toList (Maybe.map (\s -> ("name", Encode.string s)) maybeName))
+        joined = Encode.object ([ ("type", Encode.string (if perApplicant then "SRuleJoin" else "MRuleJoin")), ("children", Encode.list encodeRule rules) ] ++ Maybe.Extra.toList (Maybe.map (\s -> ("name", Encode.string s)) maybeName))
         perApplicant = List.any (\(TreeNode _ (Rule child)) -> child.scope == AnyApplicant) rules
     in        
         if perApplicant then
