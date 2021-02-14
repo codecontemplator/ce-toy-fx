@@ -1,4 +1,4 @@
-module Serialize exposing (encodeRuleList, toJson)
+module Serialize exposing (encodeRuleList, toJson, mkHttpRequestBody)
 
 import Model exposing (..)
 import Json.Encode as Encode
@@ -44,3 +44,6 @@ encodeRuleList maybeName rules =
 
 toJson : List (TreeNode Rule) -> String
 toJson process = encodeRuleList Nothing process |> Encode.encode 4
+
+mkHttpRequestBody : AppModel -> String
+mkHttpRequestBody model = toJson model.process

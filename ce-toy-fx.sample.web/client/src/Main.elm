@@ -28,6 +28,7 @@ import Url exposing (Url)
 import Model exposing (..)
 import Serialize exposing (..)
 import Utils exposing (onEnter)
+import Http
 
 main : Program () AppModel AppMsg
 main = Browser.element { 
@@ -38,7 +39,7 @@ main = Browser.element {
        }
 
 type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope | AddSubRule Int | ToggleEditHeader Int | NewHeaderValue Int String | ToggleProcessView | RuleConditionUpdated Int String | MakeHttpRequest
-    | RuleProjectionUpdated Int String
+    | RuleProjectionUpdated Int String | GotHttpResponse (Result Http.Error String)
 
 subscriptions : AppModel -> Sub AppMsg
 subscriptions model = Sub.none
@@ -75,9 +76,15 @@ update msg model =
       RuleProjectionUpdated id newProjection ->
         updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | projection = newProjection })) |> noCmd
       MakeHttpRequest -> (model, mkHttpRequest model)
+      GotHttpResponse _ -> model |> noCmd
 
 mkHttpRequest : AppModel -> Cmd AppMsg
-mkHttpRequest _ = Cmd.none
+mkHttpRequest model = 
+    Http.post {
+      url = "api/evaluate",
+      body = Http.stringBody "application/json" (mkHttpRequestBody model),
+      expect = Http.expectString GotHttpResponse 
+    }
 
 view : AppModel -> Html AppMsg
 view model =
@@ -95,6 +102,7 @@ viewProcessHeader model =
         , Grid.col [ ] []
         , Grid.col [ Col.xsAuto ] [ button [ type_ "button", class "btn btn-primary", onClick AddRule ] [ text "Add Rule" ] ]
         , Grid.col [ Col.xsAuto ] [ button [ type_ "button", class "btn btn-primary", onClick ToggleProcessView ] [ text (if model.processView == UI then "View Raw" else "View UI") ] ]
+        , Grid.col [ Col.xsAuto ] [ button [ type_ "button", class "btn btn-primary", onClick MakeHttpRequest ] [ text "Make Request" ] ]
         ]
     ]
 

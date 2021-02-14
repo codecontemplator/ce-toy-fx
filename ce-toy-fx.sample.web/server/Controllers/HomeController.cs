@@ -1,11 +1,9 @@
 ﻿using ce_toy_fx.sample.web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+using ce_toy_fx.sample.Dynamic;
+using Newtonsoft.Json.Linq;
 
 namespace ce_toy_fx.sample.web.Controllers
 {
@@ -32,6 +30,18 @@ namespace ce_toy_fx.sample.web.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+    }
+
+    public class ApiController : Controller
+    {
+        [HttpPost]
+        public IActionResult Evaluate([FromBody] object jtoken)
+        {
+            var json = jtoken.ToString();
+            var root = JsonParser.ParseMRule(json);
+            return Json("Ok!");
         }
     }
 }
