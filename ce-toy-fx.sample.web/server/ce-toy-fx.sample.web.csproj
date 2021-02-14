@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="cd &quot;$(ProjectDir)..\client&quot;&#xD;&#xA;call build.bat&#xD;&#xA;copy index.js &quot;$(ProjectDir)\wwwroot\js&quot;" />
+    <Exec Command="cd &quot;$(ProjectDir)..\client&quot;&#xD;&#xA;call build.bat&#xD;&#xA;copy index.js &quot;$(ProjectDir)\wwwroot\js&quot;" Condition="'$(OS)' == 'Windows_NT'" />
   </Target>
 
   <ItemGroup>
