@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ce-toy-fx.dynamic\ce-toy-fx.dynamic.csproj" />
+    <ProjectReference Include="..\ce-toy-fx\ce-toy-fx.csproj" />
   </ItemGroup>
 
 </Project>

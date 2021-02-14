@@ -42,6 +42,11 @@ namespace ce_toy_fx.sample.Dynamic
                 obj is Condition && 
                 (bool)(((Condition)obj).Value?.Equals(Value));
         }
+
+        public override int GetHashCode()
+        {
+            return Value?.GetHashCode() ?? 0;
+        }
     }
 
     public enum ProjectionType
@@ -68,6 +73,11 @@ namespace ce_toy_fx.sample.Dynamic
                 obj is Projection &&
                 (bool)(((Projection)obj).Value?.Equals(Value)) &&
                 ((Projection)obj).ProjectionType.Equals(ProjectionType);
+        }
+
+        public override int GetHashCode()
+        {
+            return Value?.GetHashCode() ?? 0;
         }
     }
 
