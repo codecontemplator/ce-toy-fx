@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, button, div, text)
+import Html exposing (Html, button, text)
 import Html.Attributes exposing (class, type_)
 import Html.Events exposing (onClick)
 import Html.Keyed as Keyed
@@ -13,7 +13,7 @@ import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Form.Checkbox as Checkbox
-import Bootstrap.General.HAlign as HAlign
+-- import Bootstrap.General.HAlign as HAlign
 -- import Bootstrap.Form.Radio as Radio
 -- import Bootstrap.Form.Textarea as Textarea
 -- import Bootstrap.Form.Fieldset as Fieldset
@@ -23,10 +23,11 @@ import Html.Attributes
 import Html.Attributes exposing (style)
 import Html.Events exposing (onDoubleClick)
 import Json.Decode as Decode
-import Json.Encode as Encode
-import Maybe.Extra
 import Html
 import Url exposing (Url)
+import Model exposing (..)
+import Serialize exposing (..)
+import Utils exposing (onEnter)
 
 main : Program () AppModel AppMsg
 main = Browser.element { 
@@ -36,54 +37,47 @@ main = Browser.element {
          subscriptions = subscriptions
        }
 
-type ProcessView = UI | Raw
-type alias AppModel = { process : List (TreeNode Rule), processView : ProcessView, nextId : Int }
-
-type TreeNode a = TreeNode { header : String, isExpanded : Bool, id : Int, children : List (TreeNode a), isHeaderEditEnabled : Bool } a
-
-type RuleType = Limit | Policy | Group
-type RuleScope = AllApplicants | AnyApplicant
-type Rule = Rule { type_ : RuleType, name : String, condition : String, projection : String, scope : RuleScope }
-
-type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope | AddSubRule Int | ToggleEditHeader Int | NewHeaderValue Int String | ToggleProcessView | RuleConditionUpdated Int String
+type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope | AddSubRule Int | ToggleEditHeader Int | NewHeaderValue Int String | ToggleProcessView | RuleConditionUpdated Int String | MakeHttpRequest
     | RuleProjectionUpdated Int String
 
 subscriptions : AppModel -> Sub AppMsg
 subscriptions model = Sub.none
 
 update : AppMsg -> AppModel -> (AppModel, Cmd AppMsg)
-update msg model = (updateI msg model, Cmd.none)
-
-updateI : AppMsg -> AppModel -> AppModel
-updateI msg model =
+update msg model =
   let
     mapTree f (TreeNode n pl) = f (TreeNode { n | children = List.map (mapTree f) n.children } pl)
     updateProcess f = { model | process = List.map (mapTree f) model.process }
     updateNodeWithId id f = updateProcess (\(TreeNode n pl) -> if id == n.id then f (TreeNode n pl) else TreeNode n pl)
     increaseId appModel = { appModel | nextId = appModel.nextId + 1}
     mkRuleNode () = let name = ("Rule " ++ String.fromInt model.nextId) in TreeNode { id = model.nextId, header = name, isExpanded = False, children = [], isHeaderEditEnabled = False } (Rule { type_ = Limit, name = name, condition = "<condition>", projection = "<projection>", scope = AllApplicants })
+    noCmd m = (m, Cmd.none)
   in
     case msg of
       AddRule ->
-        { model | nextId = model.nextId + 1, process = model.process ++ [ mkRuleNode () ] }
+        { model | nextId = model.nextId + 1, process = model.process ++ [ mkRuleNode () ] } |> noCmd
       ToggleTreeNode id -> 
-        updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | isExpanded =  not n.isExpanded } pl)
+        updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | isExpanded =  not n.isExpanded } pl) |> noCmd
       UpdateRuleType id newType ->
-        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | type_ = newType }))
+        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | type_ = newType })) |> noCmd
       UpdateRuleScope id newScope ->  
-        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | scope = newScope }))
+        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | scope = newScope })) |> noCmd
       AddSubRule id ->
-        updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | children = n.children ++ [mkRuleNode ()] } pl) |> increaseId
+        updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | children = n.children ++ [mkRuleNode ()] } pl) |> increaseId |> noCmd
       ToggleEditHeader id ->
-        updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | isHeaderEditEnabled = not n.isHeaderEditEnabled } pl)
+        updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | isHeaderEditEnabled = not n.isHeaderEditEnabled } pl) |> noCmd
       NewHeaderValue id value ->
-        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode { n | header = value } (Rule { r | name = value }))
+        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode { n | header = value } (Rule { r | name = value })) |> noCmd
       ToggleProcessView -> 
-        { model | processView = if model.processView == UI then Raw else UI }
+        { model | processView = if model.processView == UI then Raw else UI } |> noCmd
       RuleConditionUpdated id newCondition ->
-        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | condition = newCondition }))
+        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | condition = newCondition })) |> noCmd
       RuleProjectionUpdated id newProjection ->
-        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | projection = newProjection }))
+        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | projection = newProjection })) |> noCmd
+      MakeHttpRequest -> (model, mkHttpRequest model)
+
+mkHttpRequest : AppModel -> Cmd AppMsg
+mkHttpRequest _ = Cmd.none
 
 view : AppModel -> Html AppMsg
 view model =
@@ -104,62 +98,14 @@ viewProcessHeader model =
         ]
     ]
 
-onEnter : msg -> Html.Attribute msg
-onEnter msg =
-    let
-        isEnter code =
-            if code == 13 then
-                Decode.succeed msg
-            else
-                Decode.fail "not ENTER"
-    in
-        Html.Events.on "keydown" (Decode.andThen isEnter Html.Events.keyCode)
-
-
 viewProcessDetails : AppModel -> Html AppMsg
 viewProcessDetails model = if model.processView == UI then viewProcessDetailsUI model.process else viewProcessDetailsRaw model.process 
 
 viewProcessDetailsRaw : List (TreeNode Rule) -> Html AppMsg
 viewProcessDetailsRaw process = 
   let 
-    encodeRule : TreeNode Rule -> Encode.Value
-    encodeRule (TreeNode n (Rule r)) = 
-      case r.type_ of
-        Group -> 
-          encodeRuleList (Just r.name) n.children
-        Policy -> 
-          Encode.object 
-            [
-              ("name", Encode.string r.name),
-              ("type", Encode.string "MRuleDef"),
-              ("condition", Encode.string r.condition),
-              ("projection", Encode.object [ ("projectionType", Encode.string "Policy") ])
-            ]
-        Limit ->
-          Encode.object 
-            [
-              ("name", Encode.string r.name),
-              ("type", Encode.string "MRuleDef"),
-              ("condition", Encode.string r.condition),
-              ("projection", 
-                  Encode.object 
-                    [ ("projectionType", Encode.string "Amount") 
-                    , ("value", Encode.string r.projection)
-                    ]
-              )
-            ]
-    encodeRuleList : Maybe String -> List (TreeNode Rule) -> Encode.Value
-    encodeRuleList maybeName rules = 
-        let
-            joined = Encode.object ([ ("type", Encode.string "SRuleJoin"), ("children", Encode.list encodeRule rules) ] ++ Maybe.Extra.toList (Maybe.map (\s -> ("name", Encode.string s)) maybeName))
-            perApplicant = List.any (\(TreeNode _ (Rule child)) -> child.scope == AnyApplicant) rules
-        in        
-          if perApplicant then
-            Encode.object [ ("type", Encode.string "SRuleLift"), ("child", joined)]
-          else
-            joined
-    json : String
-    json = encodeRuleList Nothing process |> Encode.encode 4
+    --json : String
+    json =  toJson process --Serialize.encodeRuleList Nothing process |> Encode.encode 4
   in
     Html.pre [] [ text json ]
 
