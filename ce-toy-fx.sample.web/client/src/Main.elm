@@ -26,11 +26,15 @@ import Json.Decode as Decode
 import Json.Encode as Encode
 import Maybe.Extra
 import Html
+import Url exposing (Url)
 
--- https://github.com/evancz/elm-todomvc/blob/master/src/Main.elm
-
-main =
-  Browser.sandbox { init = { process = [], processView = UI, nextId = 0 }, update = update, view = view }
+main : Program () AppModel AppMsg
+main = Browser.element { 
+         init = \flags -> ({ process = [], processView = UI, nextId = 0 }, Cmd.none), 
+         view = view, 
+         update = update, 
+         subscriptions = subscriptions
+       }
 
 type ProcessView = UI | Raw
 type alias AppModel = { process : List (TreeNode Rule), processView : ProcessView, nextId : Int }
@@ -44,8 +48,14 @@ type Rule = Rule { type_ : RuleType, name : String, condition : String, projecti
 type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope | AddSubRule Int | ToggleEditHeader Int | NewHeaderValue Int String | ToggleProcessView | RuleConditionUpdated Int String
     | RuleProjectionUpdated Int String
 
-update : AppMsg -> AppModel -> AppModel
-update msg model =
+subscriptions : AppModel -> Sub AppMsg
+subscriptions model = Sub.none
+
+update : AppMsg -> AppModel -> (AppModel, Cmd AppMsg)
+update msg model = (updateI msg model, Cmd.none)
+
+updateI : AppMsg -> AppModel -> AppModel
+updateI msg model =
   let
     mapTree f (TreeNode n pl) = f (TreeNode { n | children = List.map (mapTree f) n.children } pl)
     updateProcess f = { model | process = List.map (mapTree f) model.process }
