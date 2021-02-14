@@ -41,6 +41,7 @@ namespace ce_toy_fx.sample.web.Controllers
         {
             var json = jtoken.ToString();
             var root = JsonParser.ParseMRule(json);
+            // TODO : compile and evaluate
             return Json("Ok!");
         }
     }

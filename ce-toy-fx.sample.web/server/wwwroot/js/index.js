@@ -6086,7 +6086,8 @@ var $author$project$Serialize$encodeRuleList = F2(
 					[
 						_Utils_Tuple2(
 						'type',
-						$elm$json$Json$Encode$string('SRuleJoin')),
+						$elm$json$Json$Encode$string(
+							perApplicant ? 'SRuleJoin' : 'MRuleJoin')),
 						_Utils_Tuple2(
 						'children',
 						A2($elm$json$Json$Encode$list, $author$project$Serialize$encodeRule, rules))
