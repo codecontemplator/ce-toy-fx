@@ -3,3 +3,4 @@ obj
 .vs
 ce-toy-fx.v3.ncrunchsolution.user
 elm-stuff
+**/elm-stuff

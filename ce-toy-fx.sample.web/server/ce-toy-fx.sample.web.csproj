@@ -5,4 +5,8 @@
     <RootNamespace>ce_toy_fx.sample.web</RootNamespace>
   </PropertyGroup>
 
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="cd &quot;$(ProjectDir)..\client&quot;&#xD;&#xA;call build.bat&#xD;&#xA;copy index.js &quot;$(ProjectDir)\wwwroot\js&quot;" />
+  </Target>
+
 </Project>
