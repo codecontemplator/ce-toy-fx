@@ -4610,6 +4610,9 @@ var $elm$core$Set$toList = function (_v0) {
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
+var $elm$core$Result$Ok = function (a) {
+	return {$: 'Ok', a: a};
+};
 var $author$project$Model$UI = {$: 'UI'};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
@@ -4626,9 +4629,6 @@ var $elm$json$Json$Decode$Index = F2(
 	function (a, b) {
 		return {$: 'Index', a: a, b: b};
 	});
-var $elm$core$Result$Ok = function (a) {
-	return {$: 'Ok', a: a};
-};
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
@@ -5329,6 +5329,7 @@ var $author$project$Main$subscriptions = function (model) {
 };
 var $author$project$Model$AllApplicants = {$: 'AllApplicants'};
 var $author$project$Model$Limit = {$: 'Limit'};
+var $author$project$Model$Policy = {$: 'Policy'};
 var $author$project$Model$Raw = {$: 'Raw'};
 var $author$project$Model$Rule = function (a) {
 	return {$: 'Rule', a: a};
@@ -5336,6 +5337,36 @@ var $author$project$Model$Rule = function (a) {
 var $author$project$Model$TreeNode = F2(
 	function (a, b) {
 		return {$: 'TreeNode', a: a, b: b};
+	});
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var $elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			$elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
 	});
 var $author$project$Main$GotHttpResponse = function (a) {
 	return {$: 'GotHttpResponse', a: a};
@@ -5946,28 +5977,6 @@ var $elm$http$Http$expectString = function (toMsg) {
 		toMsg,
 		$elm$http$Http$resolve($elm$core$Result$Ok));
 };
-var $author$project$Model$AnyApplicant = {$: 'AnyApplicant'};
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
 var $elm$json$Json$Encode$list = F2(
 	function (func, entries) {
 		return _Json_wrap(
@@ -6010,84 +6019,87 @@ var $elm_community$maybe_extra$Maybe$Extra$toList = function (m) {
 			[x]);
 	}
 };
-var $author$project$Serialize$encodeRule = function (_v1) {
-	var n = _v1.a;
-	var r = _v1.b.a;
-	var _v2 = r.type_;
-	switch (_v2.$) {
-		case 'Group':
-			return A2(
-				$author$project$Serialize$encodeRuleList,
-				$elm$core$Maybe$Just(r.name),
-				n.children);
-		case 'Policy':
-			return $elm$json$Json$Encode$object(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'name',
-						$elm$json$Json$Encode$string(r.name)),
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('MRuleDef')),
-						_Utils_Tuple2(
-						'condition',
-						$elm$json$Json$Encode$string(r.condition)),
-						_Utils_Tuple2(
-						'projection',
-						$elm$json$Json$Encode$object(
-							_List_fromArray(
-								[
-									_Utils_Tuple2(
-									'projectionType',
-									$elm$json$Json$Encode$string('Policy'))
-								])))
-					]));
-		default:
-			return $elm$json$Json$Encode$object(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'name',
-						$elm$json$Json$Encode$string(r.name)),
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('MRuleDef')),
-						_Utils_Tuple2(
-						'condition',
-						$elm$json$Json$Encode$string(r.condition)),
-						_Utils_Tuple2(
-						'projection',
-						$elm$json$Json$Encode$object(
-							_List_fromArray(
-								[
-									_Utils_Tuple2(
-									'projectionType',
-									$elm$json$Json$Encode$string('Amount')),
-									_Utils_Tuple2(
-									'value',
-									$elm$json$Json$Encode$string(r.projection))
-								])))
-					]));
-	}
+var $author$project$Serialize$encodeRule = function (_v0) {
+	var n = _v0.a;
+	var r = _v0.b.a;
+	var ruleTypeString = _Utils_eq(r.scope, $author$project$Model$AllApplicants) ? 'MRuleDef' : 'SRuleDef';
+	var unlifted = function () {
+		var _v1 = r.type_;
+		switch (_v1.$) {
+			case 'Group':
+				return A2(
+					$author$project$Serialize$encodeRuleList,
+					$elm$core$Maybe$Just(r.name),
+					n.children);
+			case 'Policy':
+				return $elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'name',
+							$elm$json$Json$Encode$string(r.name)),
+							_Utils_Tuple2(
+							'type',
+							$elm$json$Json$Encode$string(ruleTypeString)),
+							_Utils_Tuple2(
+							'condition',
+							$elm$json$Json$Encode$string(r.condition)),
+							_Utils_Tuple2(
+							'projection',
+							$elm$json$Json$Encode$object(
+								_List_fromArray(
+									[
+										_Utils_Tuple2(
+										'projectionType',
+										$elm$json$Json$Encode$string('Policy'))
+									])))
+						]));
+			default:
+				return $elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'name',
+							$elm$json$Json$Encode$string(r.name)),
+							_Utils_Tuple2(
+							'type',
+							$elm$json$Json$Encode$string(ruleTypeString)),
+							_Utils_Tuple2(
+							'condition',
+							$elm$json$Json$Encode$string(r.condition)),
+							_Utils_Tuple2(
+							'projection',
+							$elm$json$Json$Encode$object(
+								_List_fromArray(
+									[
+										_Utils_Tuple2(
+										'projectionType',
+										$elm$json$Json$Encode$string('Amount')),
+										_Utils_Tuple2(
+										'value',
+										$elm$json$Json$Encode$string(r.projection))
+									])))
+						]));
+		}
+	}();
+	return _Utils_eq(r.scope, $author$project$Model$AllApplicants) ? unlifted : $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'type',
+				$elm$json$Json$Encode$string('SRuleLift')),
+				_Utils_Tuple2('child', unlifted)
+			]));
 };
 var $author$project$Serialize$encodeRuleList = F2(
 	function (maybeName, rules) {
-		var perApplicant = A2(
-			$elm$core$List$any,
-			function (_v0) {
-				var child = _v0.b.a;
-				return _Utils_eq(child.scope, $author$project$Model$AnyApplicant);
-			},
-			rules);
-		var joined = $elm$json$Json$Encode$object(
+		return $elm$json$Json$Encode$object(
 			_Utils_ap(
 				_List_fromArray(
 					[
 						_Utils_Tuple2(
 						'type',
-						$elm$json$Json$Encode$string(
-							perApplicant ? 'SRuleJoin' : 'MRuleJoin')),
+						$elm$json$Json$Encode$string('MRuleJoin')),
 						_Utils_Tuple2(
 						'children',
 						A2($elm$json$Json$Encode$list, $author$project$Serialize$encodeRule, rules))
@@ -6101,14 +6113,6 @@ var $author$project$Serialize$encodeRuleList = F2(
 								$elm$json$Json$Encode$string(s));
 						},
 						maybeName))));
-		return perApplicant ? $elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'type',
-					$elm$json$Json$Encode$string('SRuleLift')),
-					_Utils_Tuple2('child', joined)
-				])) : joined;
 	});
 var $author$project$Serialize$toJson = function (process) {
 	return A2(
@@ -6309,13 +6313,13 @@ var $author$project$Main$update = F2(
 		var noCmd = function (m) {
 			return _Utils_Tuple2(m, $elm$core$Platform$Cmd$none);
 		};
-		var mkRuleNode = function (_v11) {
+		var mkRuleNode = function (_v12) {
 			var name = 'Rule ' + $elm$core$String$fromInt(model.nextId);
 			return A2(
 				$author$project$Model$TreeNode,
 				{children: _List_Nil, header: name, id: model.nextId, isExpanded: false, isHeaderEditEnabled: false},
 				$author$project$Model$Rule(
-					{condition: '<condition>', name: name, projection: '<projection>', scope: $author$project$Model$AllApplicants, type_: $author$project$Model$Limit}));
+					{condition: '', name: name, projection: '', scope: $author$project$Model$AllApplicants, type_: $author$project$Model$Limit}));
 		};
 		var mapTree = F2(
 			function (f, _v0) {
@@ -6347,9 +6351,9 @@ var $author$project$Main$update = F2(
 		var updateNodeWithId = F2(
 			function (id, f) {
 				return updateProcess(
-					function (_v10) {
-						var n = _v10.a;
-						var pl = _v10.b;
+					function (_v11) {
+						var n = _v11.a;
+						var pl = _v11.b;
 						return _Utils_eq(id, n.id) ? f(
 							A2($author$project$Model$TreeNode, n, pl)) : A2($author$project$Model$TreeNode, n, pl);
 					});
@@ -6405,7 +6409,14 @@ var $author$project$Main$update = F2(
 								$author$project$Model$Rule(
 									_Utils_update(
 										r,
-										{type_: newType})));
+										{
+											scope: A2(
+												$elm$core$List$member,
+												newType,
+												_List_fromArray(
+													[$author$project$Model$Policy, $author$project$Model$Limit])) ? r.scope : $author$project$Model$AllApplicants,
+											type_: newType
+										})));
 						}));
 			case 'UpdateRuleScope':
 				var id = msg.a;
@@ -6533,7 +6544,23 @@ var $author$project$Main$update = F2(
 					model,
 					$author$project$Main$mkHttpRequest(model));
 			default:
-				return noCmd(model);
+				var r = msg.a;
+				if (r.$ === 'Err') {
+					return noCmd(
+						_Utils_update(
+							model,
+							{
+								response: $elm$core$Result$Err('Something went wrong')
+							}));
+				} else {
+					var okmsg = r.a;
+					return noCmd(
+						_Utils_update(
+							model,
+							{
+								response: $elm$core$Result$Ok(okmsg)
+							}));
+				}
 		}
 	});
 var $rundis$elm_bootstrap$Bootstrap$Grid$Column = function (a) {
@@ -7419,12 +7446,12 @@ var $author$project$Main$viewProcessDetailsRaw = function (process) {
 var $author$project$Main$AddSubRule = function (a) {
 	return {$: 'AddSubRule', a: a};
 };
+var $author$project$Model$AnyApplicant = {$: 'AnyApplicant'};
 var $author$project$Model$Group = {$: 'Group'};
 var $author$project$Main$NewHeaderValue = F2(
 	function (a, b) {
 		return {$: 'NewHeaderValue', a: a, b: b};
 	});
-var $author$project$Model$Policy = {$: 'Policy'};
 var $author$project$Main$RuleConditionUpdated = F2(
 	function (a, b) {
 		return {$: 'RuleConditionUpdated', a: a, b: b};
@@ -7829,15 +7856,6 @@ var $rundis$elm_bootstrap$Bootstrap$Form$label = F2(
 			children);
 	});
 var $elm$html$Html$li = _VirtualDom_node('li');
-var $elm$core$List$member = F2(
-	function (x, xs) {
-		return A2(
-			$elm$core$List$any,
-			function (a) {
-				return _Utils_eq(a, x);
-			},
-			xs);
-	});
 var $rundis$elm_bootstrap$Bootstrap$Form$Select$OnChange = function (a) {
 	return {$: 'OnChange', a: a};
 };
@@ -8373,7 +8391,8 @@ var $author$project$Main$viewProcessDetailsUI = function (process) {
 								_List_Nil,
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Example: Vars.Credit < 1000 && Vars.Age >= 20')
+										$elm$html$Html$text(
+										'Example: ' + (_Utils_eq(rule.scope, $author$project$Model$AllApplicants) ? 'Vars.Credit.Sum() < 1000 && Vars.Age.Max() < 25' : 'Vars.Credit < 1000 && Vars.Age >= 20'))
 									]))
 							])),
 						A2(
@@ -8416,7 +8435,8 @@ var $author$project$Main$viewProcessDetailsUI = function (process) {
 								_List_Nil,
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Example: Vars.Amount - Vars.Credit')
+										$elm$html$Html$text(
+										'Example: ' + (_Utils_eq(rule.scope, $author$project$Model$AllApplicants) ? 'Vars.Amount - Vars.Credit.Sum()' : 'Vars.Amount - Vars.Credit'))
 									]))
 							])),
 						A2(
@@ -8439,7 +8459,7 @@ var $author$project$Main$viewProcessDetailsUI = function (process) {
 											$elm$core$List$member,
 											rule.type_,
 											_List_fromArray(
-												[$author$project$Model$Policy])))
+												[$author$project$Model$Policy, $author$project$Model$Limit])))
 									])),
 								$rundis$elm_bootstrap$Bootstrap$Form$Checkbox$checked(
 								_Utils_eq(rule.scope, $author$project$Model$AllApplicants))
@@ -8707,6 +8727,16 @@ var $author$project$Main$viewProcessHeader = function (model) {
 					]))
 			]));
 };
+var $author$project$Main$viewResponse = function (model) {
+	var _v0 = model.response;
+	if (_v0.$ === 'Ok') {
+		var okmsg = _v0.a;
+		return $elm$html$Html$text(okmsg);
+	} else {
+		var errmsg = _v0.a;
+		return $elm$html$Html$text(errmsg);
+	}
+};
 var $author$project$Main$view = function (model) {
 	return A2(
 		$rundis$elm_bootstrap$Bootstrap$Grid$container,
@@ -8735,6 +8765,17 @@ var $author$project$Main$view = function (model) {
 							[
 								$author$project$Main$viewProcessDetails(model)
 							]))
+					])),
+				$rundis$elm_bootstrap$Bootstrap$Grid$simpleRow(
+				_List_fromArray(
+					[
+						A2(
+						$rundis$elm_bootstrap$Bootstrap$Grid$col,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$author$project$Main$viewResponse(model)
+							]))
 					]))
 			]));
 };
@@ -8742,7 +8783,12 @@ var $author$project$Main$main = $elm$browser$Browser$element(
 	{
 		init: function (flags) {
 			return _Utils_Tuple2(
-				{nextId: 0, process: _List_Nil, processView: $author$project$Model$UI},
+				{
+					nextId: 0,
+					process: _List_Nil,
+					processView: $author$project$Model$UI,
+					response: $elm$core$Result$Ok('No response yet')
+				},
 				$elm$core$Platform$Cmd$none);
 		},
 		subscriptions: $author$project$Main$subscriptions,

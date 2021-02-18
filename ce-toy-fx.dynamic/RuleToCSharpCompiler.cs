@@ -30,12 +30,12 @@ namespace ce_toy_fx.sample
 
     public class RuleToCSharpCompiler
     {
-        public static Process CreateFromAst(AstNode n, params Type[] types)  // TODO: parameterize usings
+        public static Process CreateFromAst(AstNode n, string[] namespaces, Type[] types)
         {
             var sb = new StringBuilder();
+            foreach (var ns in namespaces)
+                sb.AppendLine($"using {ns};");
             sb.AppendLine(@"
-using ce_toy_fx.tests.Data;
-using ce_toy_fx.tests.Data.VariableTypes;
 using System;
 using System.Linq;
 
@@ -77,7 +77,6 @@ namespace ce_toy_fx.dynamic
                     MetadataReference.CreateFromFile(Path.Combine(systemPath, "System.Linq.dll")),
                     MetadataReference.CreateFromFile(typeof(Applicant).Assembly.Location),
                     MetadataReference.CreateFromFile(typeof(Expression).Assembly.Location),
-//                    MetadataReference.CreateFromFile(typeof(DynamicRule).Assembly.Location)
             };
 
             foreach(var type in types)

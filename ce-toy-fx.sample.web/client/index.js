@@ -4610,6 +4610,9 @@ var $elm$core$Set$toList = function (_v0) {
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
+var $elm$core$Result$Ok = function (a) {
+	return {$: 'Ok', a: a};
+};
 var $author$project$Model$UI = {$: 'UI'};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
@@ -4626,9 +4629,6 @@ var $elm$json$Json$Decode$Index = F2(
 	function (a, b) {
 		return {$: 'Index', a: a, b: b};
 	});
-var $elm$core$Result$Ok = function (a) {
-	return {$: 'Ok', a: a};
-};
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
@@ -6313,7 +6313,7 @@ var $author$project$Main$update = F2(
 		var noCmd = function (m) {
 			return _Utils_Tuple2(m, $elm$core$Platform$Cmd$none);
 		};
-		var mkRuleNode = function (_v11) {
+		var mkRuleNode = function (_v12) {
 			var name = 'Rule ' + $elm$core$String$fromInt(model.nextId);
 			return A2(
 				$author$project$Model$TreeNode,
@@ -6351,9 +6351,9 @@ var $author$project$Main$update = F2(
 		var updateNodeWithId = F2(
 			function (id, f) {
 				return updateProcess(
-					function (_v10) {
-						var n = _v10.a;
-						var pl = _v10.b;
+					function (_v11) {
+						var n = _v11.a;
+						var pl = _v11.b;
 						return _Utils_eq(id, n.id) ? f(
 							A2($author$project$Model$TreeNode, n, pl)) : A2($author$project$Model$TreeNode, n, pl);
 					});
@@ -6544,7 +6544,23 @@ var $author$project$Main$update = F2(
 					model,
 					$author$project$Main$mkHttpRequest(model));
 			default:
-				return noCmd(model);
+				var r = msg.a;
+				if (r.$ === 'Err') {
+					return noCmd(
+						_Utils_update(
+							model,
+							{
+								response: $elm$core$Result$Err('Something went wrong')
+							}));
+				} else {
+					var okmsg = r.a;
+					return noCmd(
+						_Utils_update(
+							model,
+							{
+								response: $elm$core$Result$Ok(okmsg)
+							}));
+				}
 		}
 	});
 var $rundis$elm_bootstrap$Bootstrap$Grid$Column = function (a) {
@@ -8711,6 +8727,16 @@ var $author$project$Main$viewProcessHeader = function (model) {
 					]))
 			]));
 };
+var $author$project$Main$viewResponse = function (model) {
+	var _v0 = model.response;
+	if (_v0.$ === 'Ok') {
+		var okmsg = _v0.a;
+		return $elm$html$Html$text(okmsg);
+	} else {
+		var errmsg = _v0.a;
+		return $elm$html$Html$text(errmsg);
+	}
+};
 var $author$project$Main$view = function (model) {
 	return A2(
 		$rundis$elm_bootstrap$Bootstrap$Grid$container,
@@ -8739,6 +8765,17 @@ var $author$project$Main$view = function (model) {
 							[
 								$author$project$Main$viewProcessDetails(model)
 							]))
+					])),
+				$rundis$elm_bootstrap$Bootstrap$Grid$simpleRow(
+				_List_fromArray(
+					[
+						A2(
+						$rundis$elm_bootstrap$Bootstrap$Grid$col,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$author$project$Main$viewResponse(model)
+							]))
 					]))
 			]));
 };
@@ -8746,7 +8783,12 @@ var $author$project$Main$main = $elm$browser$Browser$element(
 	{
 		init: function (flags) {
 			return _Utils_Tuple2(
-				{nextId: 0, process: _List_Nil, processView: $author$project$Model$UI},
+				{
+					nextId: 0,
+					process: _List_Nil,
+					processView: $author$project$Model$UI,
+					response: $elm$core$Result$Ok('No response yet')
+				},
 				$elm$core$Platform$Cmd$none);
 		},
 		subscriptions: $author$project$Main$subscriptions,

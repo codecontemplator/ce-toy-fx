@@ -1,6 +1,7 @@
 ﻿using ce_toy_fx.sample;
 using ce_toy_fx.sample.Dynamic;
 using ce_toy_fx.tests.Data;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -43,7 +44,11 @@ namespace ce_toy_fx.tests.Dynamic
                 }
             };
 
-            var process = RuleToCSharpCompiler.CreateFromAst(sampleProcessAst, typeof(Variables));
+            var process = RuleToCSharpCompiler.CreateFromAst(
+                    sampleProcessAst, 
+                    new string [] { "ce_toy_fx.tests.Data", "ce_toy_fx.tests.Data.VariableTypes" },
+                    new Type[] { typeof(Variables) }
+                );
 
             Assert.NotNull(process);
 

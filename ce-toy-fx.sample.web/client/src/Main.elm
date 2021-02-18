@@ -13,18 +13,11 @@ import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Select as Select
 import Bootstrap.Form.Checkbox as Checkbox
--- import Bootstrap.General.HAlign as HAlign
--- import Bootstrap.Form.Radio as Radio
--- import Bootstrap.Form.Textarea as Textarea
--- import Bootstrap.Form.Fieldset as Fieldset
-import Html.Attributes exposing (hidden)
 import Html.Attributes exposing (selected)
 import Html.Attributes
 import Html.Attributes exposing (style)
 import Html.Events exposing (onDoubleClick)
-import Json.Decode as Decode
 import Html
-import Url exposing (Url)
 import Model exposing (..)
 import Serialize exposing (..)
 import Utils exposing (onEnter)
@@ -32,7 +25,7 @@ import Http
 
 main : Program () AppModel AppMsg
 main = Browser.element { 
-         init = \flags -> ({ process = [], processView = UI, nextId = 0 }, Cmd.none), 
+         init = \flags -> ({ process = [], processView = UI, nextId = 0, response = Ok "No response yet" }, Cmd.none), 
          view = view, 
          update = update, 
          subscriptions = subscriptions
@@ -76,7 +69,10 @@ update msg model =
       RuleProjectionUpdated id newProjection ->
         updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | projection = newProjection })) |> noCmd
       MakeHttpRequest -> (model, mkHttpRequest model)
-      GotHttpResponse _ -> model |> noCmd
+      GotHttpResponse r ->
+        case r of
+          Err _ -> { model | response = Err "Something went wrong"} |> noCmd
+          Ok okmsg -> { model | response = Ok okmsg} |> noCmd
 
 mkHttpRequest : AppModel -> Cmd AppMsg
 mkHttpRequest model = 
@@ -92,7 +88,14 @@ view model =
           [ CDN.stylesheet
             , Grid.simpleRow [ Grid.col [] [ viewProcessHeader model  ] ]
             , Grid.simpleRow [ Grid.col [] [ viewProcessDetails model ] ]
+            , Grid.simpleRow [ Grid.col [] [ viewResponse model ] ]
           ]
+
+viewResponse : AppModel -> Html AppMsg
+viewResponse model = 
+  case model.response of
+    Ok okmsg -> text okmsg
+    Err errmsg -> text errmsg
 
 viewProcessHeader : AppModel -> Html AppMsg
 viewProcessHeader model = 
