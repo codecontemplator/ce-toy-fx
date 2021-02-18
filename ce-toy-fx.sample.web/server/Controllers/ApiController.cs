@@ -66,7 +66,7 @@ namespace ce_toy_fx.sample.web.Controllers
                     Applicants = applicants.ToDictionary(x => x.Id).ToImmutableDictionary()
                 });
 
-                return Json(evalResult.Item1.isSome ? "Granted" : "Rejected");
+                return Json(evalResult.Item1.isSome ? ("Granted, " + evalResult.Item2.Amount) : "Rejected");
             }
             catch(Exception e)
             {

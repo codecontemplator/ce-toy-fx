@@ -93,7 +93,8 @@ namespace ce_toy_fx.sample.Dynamic
         public Condition Condition { get; set; }
         public Projection Projection { get; set; }
 
-        public string[] Variables => Projection.Variables.Union(Condition?.Variables).ToArray();
+        public string[] Variables => 
+            Condition != null ? Projection.Variables.Union(Condition?.Variables).ToArray() : Projection.Variables;
 
         public override void Accept(AstVisitor visitor)
         {
