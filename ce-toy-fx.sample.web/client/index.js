@@ -5327,7 +5327,7 @@ var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$Main$subscriptions = function (model) {
 	return $elm$core$Platform$Sub$none;
 };
-var $author$project$Model$AllApplicants = {$: 'AllApplicants'};
+var $author$project$Model$All = {$: 'All'};
 var $author$project$Model$Limit = {$: 'Limit'};
 var $author$project$Model$Policy = {$: 'Policy'};
 var $author$project$Model$Raw = {$: 'Raw'};
@@ -6022,7 +6022,7 @@ var $elm_community$maybe_extra$Maybe$Extra$toList = function (m) {
 var $author$project$Serialize$encodeRule = function (_v0) {
 	var n = _v0.a;
 	var r = _v0.b.a;
-	var ruleTypeString = _Utils_eq(r.scope, $author$project$Model$AllApplicants) ? 'MRuleDef' : 'SRuleDef';
+	var ruleTypeString = _Utils_eq(r.ruleAggregationType, $author$project$Model$All) ? 'MRuleDef' : 'SRuleDef';
 	var unlifted = function () {
 		var _v1 = r.type_;
 		switch (_v1.$) {
@@ -6082,7 +6082,7 @@ var $author$project$Serialize$encodeRule = function (_v0) {
 						]));
 		}
 	}();
-	return _Utils_eq(r.scope, $author$project$Model$AllApplicants) ? unlifted : $elm$json$Json$Encode$object(
+	return _Utils_eq(r.ruleAggregationType, $author$project$Model$All) ? unlifted : $elm$json$Json$Encode$object(
 		_List_fromArray(
 			[
 				_Utils_Tuple2(
@@ -6319,7 +6319,7 @@ var $author$project$Main$update = F2(
 				$author$project$Model$TreeNode,
 				{children: _List_Nil, header: name, id: model.nextId, isExpanded: false, isHeaderEditEnabled: false},
 				$author$project$Model$Rule(
-					{condition: '', name: name, projection: '', scope: $author$project$Model$AllApplicants, type_: $author$project$Model$Limit}));
+					{condition: '', name: name, projection: '', ruleAggregationType: $author$project$Model$All, type_: $author$project$Model$Limit}));
 		};
 		var mapTree = F2(
 			function (f, _v0) {
@@ -6410,17 +6410,17 @@ var $author$project$Main$update = F2(
 									_Utils_update(
 										r,
 										{
-											scope: A2(
+											ruleAggregationType: A2(
 												$elm$core$List$member,
 												newType,
 												_List_fromArray(
-													[$author$project$Model$Policy, $author$project$Model$Limit])) ? r.scope : $author$project$Model$AllApplicants,
+													[$author$project$Model$Policy, $author$project$Model$Limit])) ? r.ruleAggregationType : $author$project$Model$All,
 											type_: newType
 										})));
 						}));
-			case 'UpdateRuleScope':
+			case 'UpdateRuleAggragationType':
 				var id = msg.a;
-				var newScope = msg.b;
+				var newAggragationType = msg.b;
 				return noCmd(
 					A2(
 						updateNodeWithId,
@@ -6434,7 +6434,7 @@ var $author$project$Main$update = F2(
 								$author$project$Model$Rule(
 									_Utils_update(
 										r,
-										{scope: newScope})));
+										{ruleAggregationType: newAggragationType})));
 						}));
 			case 'AddSubRule':
 				var id = msg.a;
@@ -7446,7 +7446,6 @@ var $author$project$Main$viewProcessDetailsRaw = function (process) {
 var $author$project$Main$AddSubRule = function (a) {
 	return {$: 'AddSubRule', a: a};
 };
-var $author$project$Model$AnyApplicant = {$: 'AnyApplicant'};
 var $author$project$Model$Group = {$: 'Group'};
 var $author$project$Main$NewHeaderValue = F2(
 	function (a, b) {
@@ -7460,15 +7459,16 @@ var $author$project$Main$RuleProjectionUpdated = F2(
 	function (a, b) {
 		return {$: 'RuleProjectionUpdated', a: a, b: b};
 	});
+var $author$project$Model$Single = {$: 'Single'};
 var $author$project$Main$ToggleEditHeader = function (a) {
 	return {$: 'ToggleEditHeader', a: a};
 };
 var $author$project$Main$ToggleTreeNode = function (a) {
 	return {$: 'ToggleTreeNode', a: a};
 };
-var $author$project$Main$UpdateRuleScope = F2(
+var $author$project$Main$UpdateRuleAggragationType = F2(
 	function (a, b) {
-		return {$: 'UpdateRuleScope', a: a, b: b};
+		return {$: 'UpdateRuleAggragationType', a: a, b: b};
 	});
 var $author$project$Main$UpdateRuleType = F2(
 	function (a, b) {
@@ -8392,7 +8392,7 @@ var $author$project$Main$viewProcessDetailsUI = function (process) {
 								_List_fromArray(
 									[
 										$elm$html$Html$text(
-										'Example: ' + (_Utils_eq(rule.scope, $author$project$Model$AllApplicants) ? 'Vars.Credit.Sum() < 1000 && Vars.Age.Max() < 25' : 'Vars.Credit < 1000 && Vars.Age >= 20'))
+										'Example: ' + (_Utils_eq(rule.ruleAggregationType, $author$project$Model$All) ? 'Vars.Credit.Sum() < 1000 && Vars.Age.Max() < 25' : 'Vars.Credit < 1000 && Vars.Age >= 20'))
 									]))
 							])),
 						A2(
@@ -8436,7 +8436,7 @@ var $author$project$Main$viewProcessDetailsUI = function (process) {
 								_List_fromArray(
 									[
 										$elm$html$Html$text(
-										'Example: ' + (_Utils_eq(rule.scope, $author$project$Model$AllApplicants) ? 'Vars.Amount - Vars.Credit.Sum()' : 'Vars.Amount - Vars.Credit'))
+										'Example: ' + (_Utils_eq(rule.ruleAggregationType, $author$project$Model$All) ? 'Vars.Amount - Vars.Credit.Sum()' : 'Vars.Amount - Vars.Credit'))
 									]))
 							])),
 						A2(
@@ -8447,9 +8447,9 @@ var $author$project$Main$viewProcessDetailsUI = function (process) {
 								$rundis$elm_bootstrap$Bootstrap$Form$Checkbox$onCheck(
 								function (b) {
 									return A2(
-										$author$project$Main$UpdateRuleScope,
+										$author$project$Main$UpdateRuleAggragationType,
 										node.id,
-										b ? $author$project$Model$AllApplicants : $author$project$Model$AnyApplicant);
+										b ? $author$project$Model$All : $author$project$Model$Single);
 								}),
 								$rundis$elm_bootstrap$Bootstrap$Form$Checkbox$attrs(
 								_List_fromArray(
@@ -8462,9 +8462,9 @@ var $author$project$Main$viewProcessDetailsUI = function (process) {
 												[$author$project$Model$Policy, $author$project$Model$Limit])))
 									])),
 								$rundis$elm_bootstrap$Bootstrap$Form$Checkbox$checked(
-								_Utils_eq(rule.scope, $author$project$Model$AllApplicants))
+								_Utils_eq(rule.ruleAggregationType, $author$project$Model$All))
 							]),
-						'Applies to all applicants')
+						'Use aggregation')
 					])),
 				A2(
 				$rundis$elm_bootstrap$Bootstrap$Grid$container,

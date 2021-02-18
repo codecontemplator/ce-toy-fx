@@ -7,7 +7,7 @@ import Maybe.Extra
 encodeRule : TreeNode Rule -> Encode.Value
 encodeRule (TreeNode n (Rule r)) = 
     let 
-        ruleTypeString = if r.scope == AllApplicants then "MRuleDef" else "SRuleDef"
+        ruleTypeString = if r.ruleAggregationType == All then "MRuleDef" else "SRuleDef"
         unlifted = 
             case r.type_ of
                 Group -> 
@@ -34,7 +34,7 @@ encodeRule (TreeNode n (Rule r)) =
                         )
                     ]
     in
-        if r.scope == AllApplicants then
+        if r.ruleAggregationType == All then
             unlifted
         else
             Encode.object [ ("type", Encode.string "SRuleLift"), ("child", unlifted)]

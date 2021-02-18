@@ -6,6 +6,7 @@ type alias AppModel = { process : List (TreeNode Rule), processView : ProcessVie
 type TreeNode a = TreeNode { header : String, isExpanded : Bool, id : Int, children : List (TreeNode a), isHeaderEditEnabled : Bool } a
 
 type RuleType = Limit | Policy | Group
-type RuleScope = AllApplicants | AnyApplicant
-type Rule = Rule { type_ : RuleType, name : String, condition : String, projection : String, scope : RuleScope }
+--type RuleScope = AllApplicants | AnyApplicant
+type RuleAggregationType = All | Single
+type Rule = Rule { type_ : RuleType, name : String, condition : String, projection : String, ruleAggregationType : RuleAggregationType }
 

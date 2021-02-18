@@ -41,8 +41,6 @@ using System.Linq;
 
 namespace ce_toy_fx.dynamic
 {
-    using RuleDef = RuleExprAst<Unit, RuleExprContext<Unit>>;
-
     class DynamicProcess
     {
         public static Process GetProcess()

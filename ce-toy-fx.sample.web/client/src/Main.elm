@@ -31,7 +31,7 @@ main = Browser.element {
          subscriptions = subscriptions
        }
 
-type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleScope Int RuleScope | AddSubRule Int | ToggleEditHeader Int | NewHeaderValue Int String | ToggleProcessView | RuleConditionUpdated Int String | MakeHttpRequest
+type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleAggragationType Int RuleAggregationType | AddSubRule Int | ToggleEditHeader Int | NewHeaderValue Int String | ToggleProcessView | RuleConditionUpdated Int String | MakeHttpRequest
     | RuleProjectionUpdated Int String | GotHttpResponse (Result Http.Error String)
 
 subscriptions : AppModel -> Sub AppMsg
@@ -44,7 +44,9 @@ update msg model =
     updateProcess f = { model | process = List.map (mapTree f) model.process }
     updateNodeWithId id f = updateProcess (\(TreeNode n pl) -> if id == n.id then f (TreeNode n pl) else TreeNode n pl)
     increaseId appModel = { appModel | nextId = appModel.nextId + 1}
-    mkRuleNode () = let name = ("Rule " ++ String.fromInt model.nextId) in TreeNode { id = model.nextId, header = name, isExpanded = False, children = [], isHeaderEditEnabled = False } (Rule { type_ = Limit, name = name, condition = "", projection = "", scope = AllApplicants })
+    mkRuleNode () = 
+        let name = ("Rule " ++ String.fromInt model.nextId) 
+        in TreeNode { id = model.nextId, header = name, isExpanded = False, children = [], isHeaderEditEnabled = False } (Rule { type_ = Limit, name = name, condition = "", projection = "", ruleAggregationType = All })
     noCmd m = (m, Cmd.none)
   in
     case msg of
@@ -53,9 +55,9 @@ update msg model =
       ToggleTreeNode id -> 
         updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | isExpanded =  not n.isExpanded } pl) |> noCmd
       UpdateRuleType id newType ->
-        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | type_ = newType, scope = if List.member newType [ Policy, Limit ] then r.scope else AllApplicants  })) |> noCmd
-      UpdateRuleScope id newScope ->  
-        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | scope = newScope })) |> noCmd
+        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | type_ = newType, ruleAggregationType = if List.member newType [ Policy, Limit ] then r.ruleAggregationType else All })) |> noCmd
+      UpdateRuleAggragationType id newAggragationType ->  
+        updateNodeWithId id (\(TreeNode n (Rule r)) -> TreeNode n (Rule { r | ruleAggregationType = newAggragationType })) |> noCmd
       AddSubRule id ->
         updateNodeWithId id (\(TreeNode n pl) -> TreeNode { n | children = n.children ++ [mkRuleNode ()] } pl) |> increaseId |> noCmd
       ToggleEditHeader id ->
@@ -146,19 +148,19 @@ viewProcessDetailsUI process =
                   , Form.group [ Form.attrs [ Html.Attributes.hidden (List.member rule.type_ [ Policy, Limit ] |> not) ] ]
                       [ Form.label [Html.Attributes.for "rule-condition" ] [ text "Condition"]
                       , Input.text [ Input.id "rule-condition", Input.onInput (RuleConditionUpdated node.id), Input.value rule.condition ]
-                      , Form.help [] [ text ("Example: " ++ if rule.scope == AllApplicants then "Vars.Credit.Sum() < 1000 && Vars.Age.Max() < 25" else  "Vars.Credit < 1000 && Vars.Age >= 20") ]
+                      , Form.help [] [ text ("Example: " ++ if rule.ruleAggregationType == All then "Vars.Credit.Sum() < 1000 && Vars.Age.Max() < 25" else  "Vars.Credit < 1000 && Vars.Age >= 20") ]
                       ]
                   , Form.group [ Form.attrs [ Html.Attributes.hidden (List.member rule.type_ [ Limit ] |> not) ] ]
                       [ Form.label [Html.Attributes.for "rule-projection" ] [ text "Projection"]
                       , Input.text [ Input.id "rule-projection", Input.onInput (RuleProjectionUpdated node.id), Input.value rule.projection ]
-                      , Form.help [] [ text ("Example: " ++ if rule.scope == AllApplicants then "Vars.Amount - Vars.Credit.Sum()" else "Vars.Amount - Vars.Credit") ]
+                      , Form.help [] [ text ("Example: " ++ if rule.ruleAggregationType == All then "Vars.Amount - Vars.Credit.Sum()" else "Vars.Amount - Vars.Credit") ]
                       ]
                   , Checkbox.checkbox 
                       [ Checkbox.id "rule-scope-all-applicants"
-                      , Checkbox.onCheck (\b -> UpdateRuleScope node.id (if b then AllApplicants else AnyApplicant))
+                      , Checkbox.onCheck (\b -> UpdateRuleAggragationType node.id (if b then All else Single))
                       , Checkbox.attrs [ Html.Attributes.disabled (List.member rule.type_ [ Policy, Limit ] |> not) ]
-                      , Checkbox.checked (rule.scope == AllApplicants)
-                      ] "Applies to all applicants"
+                      , Checkbox.checked (rule.ruleAggregationType == All)
+                      ] "Use aggregation"
                   ]
                 , Grid.container [ style "margin-top" "20px", style "margin-bottom" "20px" ]
                   [ Grid.simpleRow 
