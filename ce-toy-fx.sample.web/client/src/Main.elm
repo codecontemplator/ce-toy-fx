@@ -51,7 +51,7 @@ update msg model =
     updateProcess f = { model | process = List.map (mapTree f) model.process }
     updateNodeWithId id f = updateProcess (\(TreeNode n pl) -> if id == n.id then f (TreeNode n pl) else TreeNode n pl)
     increaseId appModel = { appModel | nextId = appModel.nextId + 1}
-    mkRuleNode () = let name = ("Rule " ++ String.fromInt model.nextId) in TreeNode { id = model.nextId, header = name, isExpanded = False, children = [], isHeaderEditEnabled = False } (Rule { type_ = Limit, name = name, condition = "<condition>", projection = "<projection>", scope = AllApplicants })
+    mkRuleNode () = let name = ("Rule " ++ String.fromInt model.nextId) in TreeNode { id = model.nextId, header = name, isExpanded = False, children = [], isHeaderEditEnabled = False } (Rule { type_ = Limit, name = name, condition = "", projection = "", scope = AllApplicants })
     noCmd m = (m, Cmd.none)
   in
     case msg of
@@ -112,8 +112,7 @@ viewProcessDetails model = if model.processView == UI then viewProcessDetailsUI 
 viewProcessDetailsRaw : List (TreeNode Rule) -> Html AppMsg
 viewProcessDetailsRaw process = 
   let 
-    --json : String
-    json =  toJson process --Serialize.encodeRuleList Nothing process |> Encode.encode 4
+    json =  toJson process
   in
     Html.pre [] [ text json ]
 
