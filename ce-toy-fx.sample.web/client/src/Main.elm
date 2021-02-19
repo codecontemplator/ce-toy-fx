@@ -25,14 +25,14 @@ import Http
 
 main : Program () AppModel AppMsg
 main = Browser.element { 
-         init = \flags -> ({ process = [], processView = UI, nextId = 0, response = Ok "No response yet" }, Cmd.none), 
+         init = \flags -> (initialAppModel, Cmd.none), 
          view = view, 
          update = update, 
          subscriptions = subscriptions
        }
 
 type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleAggragationType Int RuleAggregationType | AddSubRule Int | ToggleEditHeader Int | NewHeaderValue Int String | ToggleProcessView | RuleConditionUpdated Int String | MakeHttpRequest
-    | RuleProjectionUpdated Int String | GotHttpResponse (Result Http.Error String)
+    | RuleProjectionUpdated Int String | GotHttpResponse (Result Http.Error String) | AddApplicant | RequestedAmountUpdated String | UpdateApplicantValue String String String
 
 subscriptions : AppModel -> Sub AppMsg
 subscriptions model = Sub.none
@@ -48,6 +48,7 @@ update msg model =
         let name = ("Rule " ++ String.fromInt model.nextId) 
         in TreeNode { id = model.nextId, header = name, isExpanded = False, children = [], isHeaderEditEnabled = False } (Rule { type_ = Limit, name = name, condition = "", projection = "", ruleAggregationType = All })
     noCmd m = (m, Cmd.none)
+    mkApplicant () = { id = (String.fromInt model.nextId), keyValues = defaultKeyValues }
   in
     case msg of
       AddRule ->
@@ -75,6 +76,31 @@ update msg model =
         case r of
           Err _ -> { model | response = Err "Something went wrong"} |> noCmd
           Ok okmsg -> { model | response = Ok okmsg} |> noCmd
+      AddApplicant ->        
+        let 
+          oldApplication = model.application 
+          newApplication = { oldApplication | applicants = oldApplication.applicants ++ [ mkApplicant () ] } 
+        in
+          { model | application = newApplication, nextId = model.nextId + 1 } |> noCmd
+      RequestedAmountUpdated amountStr -> 
+        let 
+          amount = Maybe.withDefault 0 (String.toInt amountStr) 
+          oldApplication = model.application 
+          newApplication = { oldApplication | requestedAmount = amount } 
+        in
+          { model | application = newApplication } |> noCmd
+      UpdateApplicantValue applicantId key newValue ->
+        let
+          updateKeyValue (key_,value) = if key_ == key then (key, newValue) else (key_, value)
+          updateApplicant a = 
+            if a.id == applicantId then 
+              { a | keyValues = List.map updateKeyValue a.keyValues }
+            else
+              a
+          oldApplication = model.application 
+          newApplication = { oldApplication | applicants = List.map updateApplicant oldApplication.applicants } 
+        in
+          { model | application = newApplication } |> noCmd
 
 mkHttpRequest : AppModel -> Cmd AppMsg
 mkHttpRequest model = 
@@ -90,14 +116,75 @@ view model =
           [ CDN.stylesheet
             , Grid.simpleRow [ Grid.col [] [ viewProcessHeader model  ] ]
             , Grid.simpleRow [ Grid.col [] [ viewProcessDetails model ] ]
-            , Grid.simpleRow [ Grid.col [] [ viewResponse model ] ]
+            , Grid.simpleRow [ Grid.col [] [ viewApplicationHeader model.application  ] ]
+            , Grid.simpleRow [ Grid.col [] [ viewApplicationDetails model.application  ] ]
+            , Grid.simpleRow [ Grid.col [] [ viewRequestResponse model ] ]
           ]
 
-viewResponse : AppModel -> Html AppMsg
-viewResponse model = 
-  case model.response of
-    Ok okmsg -> text okmsg
-    Err errmsg -> text errmsg
+viewApplicationHeader : Application -> Html AppMsg
+viewApplicationHeader application = 
+  Grid.container [ style "margin-top" "20px", style "margin-bottom" "20px" ] 
+    [ Grid.row [ ] 
+        [ Grid.col [ Col.xsAuto ] [ Html.h2 [] [ text "Application" ] ]
+        , Grid.col [ ] []
+        , Grid.col [ Col.xsAuto ] [ button [ type_ "button", class "btn btn-primary", onClick AddApplicant ] [ text "Add Applicant" ] ]
+        ]
+    ]  
+
+viewApplicationDetails : Application -> Html AppMsg
+viewApplicationDetails application = 
+  let
+    viewKeydApplicant applicant = 
+      let
+        applicantForm = 
+          Form.form [ style "margin-top" "20px" ]
+            (
+              List.concatMap 
+                (
+                  \(key,value) ->
+                          [ Form.label [ Html.Attributes.for ("key-value-"++key)] [ text key ]
+                          , Input.text [ Input.id ("key-value-"++key), Input.onInput (UpdateApplicantValue applicant.id key), Input.value value ]
+                          ]
+                ) 
+                applicant.keyValues
+            )
+      in
+        (applicant.id, applicantForm)
+  in
+    Grid.container []
+      [ Grid.row [] [ Grid.col []
+          [ Form.form [ style "margin-top" "20px" ]
+            [ Form.group [ ]
+                [ Form.label [Html.Attributes.for "application-amount" ] [ text "Requested Amount"]
+                , Input.text [ Input.id "application-amount", Input.onInput RequestedAmountUpdated, Input.value (String.fromInt application.requestedAmount) ]
+                ]
+            ]
+          ]
+        ]
+      , Grid.row [] [ Grid.col [] 
+          [ Keyed.ul [ class "list-group" ] <| List.map viewKeydApplicant application.applicants
+          ]
+        ]      
+      ]
+
+viewRequestResponse : AppModel -> Html AppMsg
+viewRequestResponse model = 
+  let  
+    responseHtml = 
+      case model.response of
+        Ok okmsg -> text okmsg
+        Err errmsg -> text errmsg
+  in
+    Grid.container [ style "margin-top" "20px", style "margin-bottom" "20px" ] 
+      [ Grid.row [ ] 
+          [ Grid.col [ Col.xsAuto ] [ Html.h2 [] [ text "Request / Response" ] ]
+          , Grid.col [ ] []
+          , Grid.col [ Col.xsAuto ] [ button [ type_ "button", class "btn btn-primary", onClick MakeHttpRequest ] [ text "Make Request" ] ]
+          ]
+      , Grid.row [] 
+          [ Grid.col [ ] [ responseHtml ] 
+          ]
+      ]
 
 viewProcessHeader : AppModel -> Html AppMsg
 viewProcessHeader model = 
@@ -107,7 +194,6 @@ viewProcessHeader model =
         , Grid.col [ ] []
         , Grid.col [ Col.xsAuto ] [ button [ type_ "button", class "btn btn-primary", onClick AddRule ] [ text "Add Rule" ] ]
         , Grid.col [ Col.xsAuto ] [ button [ type_ "button", class "btn btn-primary", onClick ToggleProcessView ] [ text (if model.processView == UI then "View Raw" else "View UI") ] ]
-        , Grid.col [ Col.xsAuto ] [ button [ type_ "button", class "btn btn-primary", onClick MakeHttpRequest ] [ text "Make Request" ] ]
         ]
     ]
 
@@ -117,7 +203,7 @@ viewProcessDetails model = if model.processView == UI then viewProcessDetailsUI 
 viewProcessDetailsRaw : List (TreeNode Rule) -> Html AppMsg
 viewProcessDetailsRaw process = 
   let 
-    json =  toJson process
+    json =  processToJson process
   in
     Html.pre [] [ text json ]
 
