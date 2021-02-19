@@ -1,4 +1,4 @@
-module Serialize exposing (encodeRuleList, toJson, mkHttpRequestBody)
+module Serialize exposing (encodeRuleList, modelToJson, processToJson, mkHttpRequestBody)
 
 import Model exposing (..)
 import Json.Encode as Encode
@@ -43,8 +43,38 @@ encodeRuleList : Maybe String -> List (TreeNode Rule) -> Encode.Value
 encodeRuleList maybeName rules = 
     Encode.object ([ ("type", Encode.string "MRuleJoin"), ("children", Encode.list encodeRule rules) ] ++ Maybe.Extra.toList (Maybe.map (\s -> ("name", Encode.string s)) maybeName))
 
-toJson : List (TreeNode Rule) -> String
-toJson process = encodeRuleList Nothing process |> Encode.encode 4
+encodeApplication : Application -> Encode.Value
+encodeApplication application = 
+    let 
+        encodeKeyValue (key,value) = 
+            Encode.object ([
+                ("key", Encode.string key),
+                ("value", Encode.int (Maybe.withDefault 0 (String.toInt value)))  -- todo: handle other value types
+            ])
+        encodeApplicant applicant = 
+            Encode.object ([
+                ("id", Encode.string applicant.id),
+                ("keyValues", Encode.list encodeKeyValue applicant.keyValues)
+            ])
+    in 
+        Encode.object ([
+            ("requestedAmount", Encode.int application.requestedAmount),
+            ("applicants", Encode.list encodeApplicant application.applicants)
+        ])
+
+encodeModel : AppModel -> Encode.Value
+encodeModel model = 
+    Encode.object ([
+            ("process", encodeRuleList Nothing model.process),
+            ("applicaction", encodeApplication model.application)
+        ])
+
+modelToJson : AppModel -> String
+modelToJson model = encodeModel model |> Encode.encode 4
+
+processToJson : List (TreeNode Rule) -> String
+processToJson process = encodeRuleList Nothing process |> Encode.encode 4
 
 mkHttpRequestBody : AppModel -> String
-mkHttpRequestBody model = toJson model.process
+mkHttpRequestBody model = modelToJson model
+    

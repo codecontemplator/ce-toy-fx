@@ -193,7 +193,7 @@ viewProcessDetails model = if model.processView == UI then viewProcessDetailsUI 
 viewProcessDetailsRaw : List (TreeNode Rule) -> Html AppMsg
 viewProcessDetailsRaw process = 
   let 
-    json =  toJson process
+    json =  processToJson process
   in
     Html.pre [] [ text json ]
 
