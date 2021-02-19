@@ -6404,7 +6404,7 @@ var $author$project$Main$update = F2(
 		var noCmd = function (m) {
 			return _Utils_Tuple2(m, $elm$core$Platform$Cmd$none);
 		};
-		var mkRuleNode = function (_v13) {
+		var mkRuleNode = function (_v14) {
 			var name = 'Rule ' + $elm$core$String$fromInt(model.nextId);
 			return A2(
 				$author$project$Model$TreeNode,
@@ -6412,7 +6412,7 @@ var $author$project$Main$update = F2(
 				$author$project$Model$Rule(
 					{condition: '', name: name, projection: '', ruleAggregationType: $author$project$Model$All, type_: $author$project$Model$Limit}));
 		};
-		var mkApplicant = function (_v12) {
+		var mkApplicant = function (_v13) {
 			return {
 				id: $elm$core$String$fromInt(model.nextId),
 				keyValues: $author$project$Model$defaultKeyValues
@@ -6448,9 +6448,9 @@ var $author$project$Main$update = F2(
 		var updateNodeWithId = F2(
 			function (id, f) {
 				return updateProcess(
-					function (_v11) {
-						var n = _v11.a;
-						var pl = _v11.b;
+					function (_v12) {
+						var n = _v12.a;
+						var pl = _v12.b;
 						return _Utils_eq(id, n.id) ? f(
 							A2($author$project$Model$TreeNode, n, pl)) : A2($author$project$Model$TreeNode, n, pl);
 					});
@@ -6673,7 +6673,7 @@ var $author$project$Main$update = F2(
 				return noCmd(
 					_Utils_update(
 						model,
-						{application: newApplication}));
+						{application: newApplication, nextId: model.nextId + 1}));
 			case 'RequestedAmountUpdated':
 				var amountStr = msg.a;
 				var oldApplication = model.application;
@@ -6687,12 +6687,33 @@ var $author$project$Main$update = F2(
 				return noCmd(
 					_Utils_update(
 						model,
-						{application: newApplication, nextId: model.nextId + 1}));
+						{application: newApplication}));
 			default:
 				var applicantId = msg.a;
 				var key = msg.b;
 				var newValue = msg.c;
-				return noCmd(model);
+				var updateKeyValue = function (_v11) {
+					var key_ = _v11.a;
+					var value = _v11.b;
+					return _Utils_eq(key_, key) ? _Utils_Tuple2(key, newValue) : _Utils_Tuple2(key_, value);
+				};
+				var updateApplicant = function (a) {
+					return _Utils_eq(a.id, applicantId) ? _Utils_update(
+						a,
+						{
+							keyValues: A2($elm$core$List$map, updateKeyValue, a.keyValues)
+						}) : a;
+				};
+				var oldApplication = model.application;
+				var newApplication = _Utils_update(
+					oldApplication,
+					{
+						applicants: A2($elm$core$List$map, updateApplicant, oldApplication.applicants)
+					});
+				return noCmd(
+					_Utils_update(
+						model,
+						{application: newApplication}));
 		}
 	});
 var $rundis$elm_bootstrap$Bootstrap$Grid$Column = function (a) {

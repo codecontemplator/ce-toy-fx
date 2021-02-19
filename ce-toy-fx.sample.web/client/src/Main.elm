@@ -81,14 +81,14 @@ update msg model =
           oldApplication = model.application 
           newApplication = { oldApplication | applicants = oldApplication.applicants ++ [ mkApplicant () ] } 
         in
-          { model | application = newApplication } |> noCmd
+          { model | application = newApplication, nextId = model.nextId + 1 } |> noCmd
       RequestedAmountUpdated amountStr -> 
         let 
           amount = Maybe.withDefault 0 (String.toInt amountStr) 
           oldApplication = model.application 
           newApplication = { oldApplication | requestedAmount = amount } 
         in
-          { model | application = newApplication, nextId = model.nextId + 1 } |> noCmd
+          { model | application = newApplication } |> noCmd
       UpdateApplicantValue applicantId key newValue ->
         let
           updateKeyValue (key_,value) = if key_ == key then (key, newValue) else (key_, value)
