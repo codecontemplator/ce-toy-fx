@@ -66,7 +66,7 @@ namespace ce_toy_fx.sample.web.Controllers
                 var evalResult = process.RuleExpr(new RuleExprContext<Unit>
                 {
                     Log = ImmutableList<LogEntry>.Empty,
-                    Amount = 1500,
+                    Amount = request.Application.RequestedAmount,
                     Applicants = applicants.ToDictionary(x => x.Id).ToImmutableDictionary()
                 });
 
