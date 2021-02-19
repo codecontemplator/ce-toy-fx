@@ -66,7 +66,7 @@ encodeModel : AppModel -> Encode.Value
 encodeModel model = 
     Encode.object ([
             ("process", encodeRuleList Nothing model.process),
-            ("applicaction", encodeApplication model.application)
+            ("application", encodeApplication model.application)
         ])
 
 modelToJson : AppModel -> String

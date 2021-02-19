@@ -12,10 +12,11 @@ namespace ce_toy_fx.sample.web.Controllers
     public class ApiController : Controller
     {
         [HttpPost]
-        public IActionResult Evaluate([FromBody] object jtoken)
+        public IActionResult Evaluate([FromBody] EvaluateRequest request)
         {
             try
             {
+                var jtoken = request.Process;
                 var json = jtoken.ToString();
                 var rootAst = JsonParser.ParseMRule(json);
                 var process = RuleToCSharpCompiler.CreateFromAst(
@@ -23,6 +24,8 @@ namespace ce_toy_fx.sample.web.Controllers
                     new string[] { "ce_toy_fx.sample.web.Models", "ce_toy_fx.sample.web.Models.VariableTypes" },
                     new Type[] { typeof(Variables) });
 
+                var applicants = request.Application.Applicants.Select(x => x.ToInternalModel()).ToList();
+                /*
                 var applicants = new List<Applicant>
                     {
                         new Applicant
@@ -58,6 +61,7 @@ namespace ce_toy_fx.sample.web.Controllers
                             }.ToImmutableDictionary()
                         }
                     };
+                */
 
                 var evalResult = process.RuleExpr(new RuleExprContext<Unit>
                 {
