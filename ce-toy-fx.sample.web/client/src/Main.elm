@@ -90,7 +90,17 @@ update msg model =
         in
           { model | application = newApplication, nextId = model.nextId + 1 } |> noCmd
       UpdateApplicantValue applicantId key newValue ->
-        model |> noCmd
+        let
+          updateKeyValue (key_,value) = if key_ == key then (key, newValue) else (key_, value)
+          updateApplicant a = 
+            if a.id == applicantId then 
+              { a | keyValues = List.map updateKeyValue a.keyValues }
+            else
+              a
+          oldApplication = model.application 
+          newApplication = { oldApplication | applicants = List.map updateApplicant oldApplication.applicants } 
+        in
+          { model | application = newApplication } |> noCmd
 
 mkHttpRequest : AppModel -> Cmd AppMsg
 mkHttpRequest model = 
