@@ -28,11 +28,14 @@ initialProcess =
                (Rule { type_ = Policy, name = "Max Age Policy", condition = "Vars.Age < 75", projection = "", ruleAggregationType = Single})                       
     ]
 
+initialApplicants : List Applicant
+initialApplicants = [ { id = "initial_0", keyValues = defaultKeyValues } ]
+
 initialAppModel : AppModel
 initialAppModel =
             { process = initialProcess
             , processView = UI
             , nextId = 10
             , response = Ok "No response yet"
-            , application = { applicants = [], requestedAmount = 1000 } 
+            , application = { applicants = initialApplicants, requestedAmount = 1500 } 
             }

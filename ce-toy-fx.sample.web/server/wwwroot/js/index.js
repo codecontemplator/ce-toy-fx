@@ -5320,6 +5320,16 @@ var $elm$core$Task$perform = F2(
 	});
 var $elm$browser$Browser$element = _Browser_element;
 var $author$project$Model$UI = {$: 'UI'};
+var $author$project$Model$defaultKeyValues = _List_fromArray(
+	[
+		_Utils_Tuple2('Age', '25'),
+		_Utils_Tuple2('Salary', '1000'),
+		_Utils_Tuple2('Credit', '100')
+	]);
+var $author$project$Model$initialApplicants = _List_fromArray(
+	[
+		{id: 'initial_0', keyValues: $author$project$Model$defaultKeyValues}
+	]);
 var $author$project$Model$All = {$: 'All'};
 var $author$project$Model$Limit = {$: 'Limit'};
 var $author$project$Model$Policy = {$: 'Policy'};
@@ -5345,7 +5355,7 @@ var $author$project$Model$initialProcess = _List_fromArray(
 			{condition: 'Vars.Age < 75', name: 'Max Age Policy', projection: '', ruleAggregationType: $author$project$Model$Single, type_: $author$project$Model$Policy}))
 	]);
 var $author$project$Model$initialAppModel = {
-	application: {applicants: _List_Nil, requestedAmount: 1000},
+	application: {applicants: $author$project$Model$initialApplicants, requestedAmount: 1500},
 	nextId: 10,
 	process: $author$project$Model$initialProcess,
 	processView: $author$project$Model$UI,
@@ -5359,12 +5369,6 @@ var $author$project$Main$subscriptions = function (model) {
 	return $elm$core$Platform$Sub$none;
 };
 var $author$project$Model$Raw = {$: 'Raw'};
-var $author$project$Model$defaultKeyValues = _List_fromArray(
-	[
-		_Utils_Tuple2('Age', '25'),
-		_Utils_Tuple2('Salary', '1000'),
-		_Utils_Tuple2('Credit', '100')
-	]);
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
