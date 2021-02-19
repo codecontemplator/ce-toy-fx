@@ -25,20 +25,14 @@ import Http
 
 main : Program () AppModel AppMsg
 main = Browser.element { 
-         init = \flags -> (
-            { process = []
-            , processView = UI
-            , nextId = 0
-            , response = Ok "No response yet"
-            , application = { applicants = [], requestedAmount = 1000 } 
-            }, Cmd.none), 
+         init = \flags -> (initialAppModel, Cmd.none), 
          view = view, 
          update = update, 
          subscriptions = subscriptions
        }
 
 type AppMsg = AddRule | ToggleTreeNode Int | UpdateRuleType Int RuleType | UpdateRuleAggragationType Int RuleAggregationType | AddSubRule Int | ToggleEditHeader Int | NewHeaderValue Int String | ToggleProcessView | RuleConditionUpdated Int String | MakeHttpRequest
-    | RuleProjectionUpdated Int String | GotHttpResponse (Result Http.Error String) | AddApplicant | RequestedAmountUpdated String
+    | RuleProjectionUpdated Int String | GotHttpResponse (Result Http.Error String) | AddApplicant | RequestedAmountUpdated String | UpdateApplicantValue String String String
 
 subscriptions : AppModel -> Sub AppMsg
 subscriptions model = Sub.none
@@ -54,7 +48,7 @@ update msg model =
         let name = ("Rule " ++ String.fromInt model.nextId) 
         in TreeNode { id = model.nextId, header = name, isExpanded = False, children = [], isHeaderEditEnabled = False } (Rule { type_ = Limit, name = name, condition = "", projection = "", ruleAggregationType = All })
     noCmd m = (m, Cmd.none)
-    mkApplicant () = { id = "", keyValues = defaultKeyValues }
+    mkApplicant () = { id = (String.fromInt model.nextId), keyValues = defaultKeyValues }
   in
     case msg of
       AddRule ->
@@ -85,7 +79,7 @@ update msg model =
       AddApplicant ->        
         let 
           oldApplication = model.application 
-          newApplication = { oldApplication | applicants = [] } 
+          newApplication = { oldApplication | applicants = oldApplication.applicants ++ [ mkApplicant () ] } 
         in
           { model | application = newApplication } |> noCmd
       RequestedAmountUpdated amountStr -> 
@@ -94,7 +88,9 @@ update msg model =
           oldApplication = model.application 
           newApplication = { oldApplication | requestedAmount = amount } 
         in
-          { model | application = newApplication } |> noCmd
+          { model | application = newApplication, nextId = model.nextId + 1 } |> noCmd
+      UpdateApplicantValue applicantId key newValue ->
+        model |> noCmd
 
 mkHttpRequest : AppModel -> Cmd AppMsg
 mkHttpRequest model = 
@@ -127,17 +123,39 @@ viewApplicationHeader application =
 
 viewApplicationDetails : Application -> Html AppMsg
 viewApplicationDetails application = 
-  Grid.container []
-    [ Grid.row [] [ Grid.col []
-        [ Form.form [ style "margin-top" "20px" ]
-          [ Form.group [ ]
-              [ Form.label [Html.Attributes.for "application-amount" ] [ text "Requested Amount"]
-              , Input.text [ Input.id "application-amount", Input.onInput RequestedAmountUpdated, Input.value (String.fromInt application.requestedAmount) ]
-              ]
+  let
+    viewKeydApplicant applicant = 
+      let
+        applicantForm = 
+          Form.form [ style "margin-top" "20px" ]
+            (
+              List.concatMap 
+                (
+                  \(key,value) ->
+                          [ Form.label [ Html.Attributes.for ("key-value-"++key)] [ text key ]
+                          , Input.text [ Input.id ("key-value-"++key), Input.onInput (UpdateApplicantValue applicant.id key), Input.value value ]
+                          ]
+                ) 
+                applicant.keyValues
+            )
+      in
+        (applicant.id, applicantForm)
+  in
+    Grid.container []
+      [ Grid.row [] [ Grid.col []
+          [ Form.form [ style "margin-top" "20px" ]
+            [ Form.group [ ]
+                [ Form.label [Html.Attributes.for "application-amount" ] [ text "Requested Amount"]
+                , Input.text [ Input.id "application-amount", Input.onInput RequestedAmountUpdated, Input.value (String.fromInt application.requestedAmount) ]
+                ]
+            ]
           ]
         ]
-      ]      
-    ]
+      , Grid.row [] [ Grid.col [] 
+          [ Keyed.ul [ class "list-group" ] <| List.map viewKeydApplicant application.applicants
+          ]
+        ]      
+      ]
 
 viewRequestResponse : AppModel -> Html AppMsg
 viewRequestResponse model = 
@@ -166,7 +184,6 @@ viewProcessHeader model =
         , Grid.col [ ] []
         , Grid.col [ Col.xsAuto ] [ button [ type_ "button", class "btn btn-primary", onClick AddRule ] [ text "Add Rule" ] ]
         , Grid.col [ Col.xsAuto ] [ button [ type_ "button", class "btn btn-primary", onClick ToggleProcessView ] [ text (if model.processView == UI then "View Raw" else "View UI") ] ]
-        , Grid.col [ Col.xsAuto ] [ button [ type_ "button", class "btn btn-primary", onClick MakeHttpRequest ] [ text "Make Request" ] ]
         ]
     ]
 
